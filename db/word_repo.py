@@ -1,5 +1,6 @@
 import logging
 from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import aiosqlite
 from core.srs import SRSStatus
@@ -10,9 +11,10 @@ logger = logging.getLogger(__name__)
 class WordRepo:
     """Repository for managing word-related data and statistics."""
 
-    def __init__(self, db: aiosqlite.Connection):
+    def __init__(self, db: aiosqlite.Connection, tz: ZoneInfo = ZoneInfo("UTC")):
         """Initialize the WordRepo with a database connection."""
         self.db = db
+        self.tz = tz
 
     # --- READ & SEARCH OPERATIONS ---
 
@@ -80,8 +82,9 @@ class WordRepo:
         else:
             raise ValueError("Invalid date field: %s" % field)
 
-        start = datetime.now(tz=UTC).replace(hour=0, minute=0, second=0, microsecond=0)
-        cursor = await self.db.execute(query, (user_id, language, start.isoformat()))
+        start_local = datetime.now(tz=self.tz).replace(hour=0, minute=0, second=0, microsecond=0)
+        start_utc = start_local.astimezone(UTC)
+        cursor = await self.db.execute(query, (user_id, language, start_utc.isoformat()))
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 
@@ -220,8 +223,11 @@ class WordRepo:
     async def get_full_stats(self, user_id: int, language: str, daily_limit: int = 20) -> dict:
         """Get comprehensive statistics about the user's learning progress."""
         now_utc = datetime.now(tz=UTC)
-        today_start = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
-        next_day_start = today_start + timedelta(days=1)
+        
+        # Calculate start of today and start of next day in user's local timezone
+        today_local = datetime.now(tz=self.tz).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = today_local.astimezone(UTC)
+        next_day_start = (today_local + timedelta(days=1)).astimezone(UTC)
 
         cursor = await self.db.execute(
             """SELECT

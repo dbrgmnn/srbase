@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from aiohttp import web
 from db.models import init_db
 from db.user_repo import UserRepo
@@ -24,13 +25,20 @@ logger = logging.getLogger(__name__)
 DB_PATH = os.getenv("DB_PATH", "srbase.db")
 APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
 APP_PORT = int(os.getenv("APP_PORT", 8080))
+TZ_NAME = os.getenv("APP_TIMEZONE", "UTC")
+
+try:
+    APP_TZ = ZoneInfo(TZ_NAME)
+except ZoneInfoNotFoundError:
+    logger.error("Invalid APP_TIMEZONE: %s. Falling back to UTC.", TZ_NAME)
+    APP_TZ = ZoneInfo("UTC")
 
 async def on_startup(app: web.Application):
     """Initialize resources on startup."""
     db = await init_db(DB_PATH)
     app['db'] = db
     app['user_repo'] = UserRepo(db)
-    app['word_repo'] = WordRepo(db)
+    app['word_repo'] = WordRepo(db, tz=APP_TZ)
     
     # Start the notification scheduler
     asyncio.create_task(scheduler_loop(app))

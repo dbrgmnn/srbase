@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 import aiohttp
 
 logger = logging.getLogger(__name__)
@@ -36,8 +37,8 @@ async def scheduler_loop(app):
         logger.error("Invalid TG_MAPPING format: %s", e)
         return
 
+    tz_name = os.getenv("APP_TIMEZONE", "UTC")
     last_sent = {} # {f"{user_id}_{lang}": "YYYY-MM-DD-HH"}
-    logger.info("Scheduler initialized for users: %s", list(user_map.keys()))
 
     lang_meta = {
         "de": {"flag": "🇩🇪", "name": "German"},
@@ -56,11 +57,12 @@ async def scheduler_loop(app):
             
             sleep_seconds = (next_check - now).total_seconds()
             
-            logger.info("Scheduler sleeping until (UTC): %s", next_check)
+            next_check_local = next_check.astimezone(ZoneInfo(tz_name))
+            logger.info("Scheduler sleeping until: %s", next_check_local.strftime("%Y-%m-%d %H:%M:%S"))
             await asyncio.sleep(max(sleep_seconds, 1))
 
             # 2. Wake up and check all users
-            now = datetime.now(timezone.utc)
+            now = datetime.now(ZoneInfo(tz_name))
             current_hour_in_minutes = now.hour * 60
             today_key = now.strftime("%Y-%m-%d-%H")
 
