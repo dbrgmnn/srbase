@@ -5,8 +5,6 @@ let currentUser = null;
 let currentLanguage = 'de';
 let searchTimeout = null;
 let userSettings = { daily_limit: 20 };
-let lastStats = null;
-let statsTimer = null;
 
 async function init() {
     const userId = localStorage.getItem('user_id');
@@ -18,48 +16,9 @@ async function init() {
             if (sData.status === 'ok') userSettings = sData.settings;
             renderHub(); 
             updateStats();
-            startStatsTimer();
         }
         else logout();
     } else renderLogin();
-}
-
-function startStatsTimer() {
-    if (statsTimer) clearInterval(statsTimer);
-    statsTimer = setInterval(refreshCountdowns, 30000); // Check every 30s
-}
-
-function refreshCountdowns() {
-    if (!lastStats || !document.getElementById('homePanel') || document.getElementById('homePanel').style.display === 'none') return;
-    
-    const dueEl = document.getElementById('statDue');
-    if (dueEl && parseInt(dueEl.innerText) === 0 || isNaN(parseInt(dueEl.innerText))) {
-        dueEl.innerText = formatTimeRemaining(lastStats.next_due_at);
-        dueEl.style.fontSize = dueEl.innerText.includes('In') ? '1rem' : '1.25rem';
-    }
-
-    const nextTimeEl = document.getElementById('statNextTime');
-    if (nextTimeEl && (nextTimeEl.innerText === 'Done' || nextTimeEl.innerText.includes('In'))) {
-        nextTimeEl.innerText = formatTimeRemaining(lastStats.next_day_start_utc);
-        nextTimeEl.style.fontSize = nextTimeEl.innerText.includes('In') ? '1rem' : '1.25rem';
-    }
-}
-
-function formatTimeRemaining(isoString) {
-    if (!isoString) return "Done";
-    const target = new Date(isoString);
-    const now = new Date();
-    const diffMs = target - now;
-    
-    if (diffMs <= 0) return "Ready";
-    
-    const diffMins = Math.floor(diffMs / 60000);
-    const hours = Math.floor(diffMins / 60);
-    const mins = diffMins % 60;
-    
-    if (hours > 24) return `>1 day`;
-    if (hours > 0) return `In ${hours}h ${mins}m`;
-    return `In ${mins}m`;
 }
 
 function renderLogin() {
@@ -121,8 +80,9 @@ async function updateStats() {
         const nextTimeEl = document.getElementById('statNextTime');
         if (nextTimeEl) {
             const limit = userSettings.daily_limit || 20;
-            const remaining = Math.max(0, limit - (stats.today_new || 0));
-            nextTimeEl.innerText = remaining > 0 ? remaining : "Done";
+            const remainingInLimit = Math.max(0, limit - (stats.today_new || 0));
+            const availableNew = Math.min(stats.st_new || 0, remainingInLimit);
+            nextTimeEl.innerText = availableNew > 0 ? availableNew : "0";
         }
 
         const pBtn = document.querySelector('.btn-primary.btn-lg');
@@ -130,8 +90,6 @@ async function updateStats() {
             pBtn.disabled = !(stats.session_total > 0);
             pBtn.innerText = 'Practice';
         }
-
-        refreshCountdowns();
     }
 }
 

@@ -41,7 +41,7 @@ const appRender = {
                         <div class="stat-label">Review</div>
                     </div>
                     <div class="stat-card large">
-                        <div class="stat-num" id="statNextTime">Ready</div>
+                        <div class="stat-num" id="statNextTime">0</div>
                         <div class="stat-label">New</div>
                     </div>
                 </div>
