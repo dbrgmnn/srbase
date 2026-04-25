@@ -33,7 +33,9 @@ const appRender = {
         <div id="addWordPanel" class="panel">${appRender.addWord()}</div>
         
         <div class="view-container" id="homePanel">
-
+            <div class="panel-section" style="margin-top:0;">
+                <div class="panel-label" style="text-align:center;">Home</div>
+            </div>
             <div class="dashboard-grid">
                 <div class="dashboard-row row-main">
                     <div class="stat-card large">
@@ -84,7 +86,10 @@ const appRender = {
         </div>
     `,
     addWord: () => `
-        <div class="card" style="padding:20px;">
+        <div class="panel-section" style="margin-top:0;">
+            <div class="panel-label" style="text-align:center;">Add Word</div>
+        </div>
+        <div class="card" style="padding:20px; margin-top:20px;">
             <input type="text" id="addWordText" class="input" placeholder="Word (Required)" required>
             <input type="text" id="addTranslationText" class="input" placeholder="Translation (Required)" required>
             <input type="text" id="addExampleText" class="input" placeholder="Example Sentence (Optional)">
@@ -104,7 +109,10 @@ const appRender = {
         </div>
     `,
     search: () => `
-        <div style="margin-bottom:10px;">
+        <div class="panel-section" style="margin-top:0;">
+            <div class="panel-label" style="text-align:center;">Dictionary</div>
+        </div>
+        <div style="margin-top:20px; margin-bottom:10px;">
             <input type="text" id="searchInput" class="input" placeholder="Search dictionary..." oninput="handleSearch(this.value)" style="margin-bottom:0;">
         </div>
         <div id="searchResults"></div>
@@ -137,15 +145,15 @@ const appRender = {
 
         return `
             <div class="panel-section" style="margin-top:0;">
-                <span class="panel-label">Profile</span>
+                <div class="panel-label" style="text-align:center;">Profile</div>
                 <div class="card" style="padding:18px;">
                     ${profileDisplay}
                     ${actionButtons}
                 </div>
             </div>
             
-            <div class="panel-section">
-                <span class="panel-label">Learning</span>
+            <div class="panel-section" style="margin-top:20px;">
+                <div class="panel-label" style="text-align:center;">Learning</div>
                 <div class="setting-item">
                     <span style="color:var(--text-high); font-weight:500;">Dictionary</span>
                     <select class="input" style="width: auto; height: 38px; padding: 0 12px; margin: 0; text-align: right; border:none; background:transparent;" onchange="changeLanguage(this.value)">
