@@ -55,9 +55,18 @@ async def index_handler(_request):
     """Serve the main index.html file."""
     return web.FileResponse('./index.html')
 
+@web.middleware
+async def no_cache_middleware(request, handler):
+    response = await handler(request)
+    if isinstance(response, web.Response):
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    return response
+
 def create_app() -> web.Application:
     """Factory to create the application instance."""
-    instance = web.Application(middlewares=[auth_middleware])
+    instance = web.Application(middlewares=[no_cache_middleware, auth_middleware])
     
     # Register signals
     instance.on_startup.append(on_startup)
