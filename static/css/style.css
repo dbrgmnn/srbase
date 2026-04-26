@@ -1,12 +1,13 @@
 :root {
-    --bg-main: #0a0a0a;
+    --bg-main: #000000;
     --bg-card: #161616;
     --bg-input: #222222;
     --primary: #007aff;
     --text-high: #ffffff;
     --text-med: #a0a0a0;
     --text-low: #666666;
-    --radius: 18px;
+    --radius: 30px;
+    --radius-input: 30px;
     --app-width: 480px;
     --page-padding: 25px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -52,7 +53,7 @@ h1 { font-size: 1.7rem; letter-spacing: -0.5px; }
 }
 
 .input { 
-    width: 100%; padding: 16px; border-radius: 12px; 
+    width: 100%; padding: 16px; border-radius: var(--radius-input); 
     border: 1px solid #2a2a2a; background: var(--bg-input); 
     color: #fff; font-size: 16px; margin-bottom: 12px; outline: none; 
 }
@@ -69,7 +70,7 @@ select.input {
     justify-content: center;
     gap: 8px;
     padding: 12px 20px;
-    border-radius: 14px;
+    border-radius: var(--radius-input);
     font-weight: 600;
     font-size: 0.95rem;
     cursor: pointer;
@@ -89,7 +90,7 @@ select.input {
 .btn-ghost { background: transparent; color: var(--primary); padding: 8px 12px; }
 .btn-ghost-muted { background: transparent; color: var(--text-low); padding: 8px 12px; }
 
-.btn-lg { padding: 20px; font-size: 1.25rem; font-weight: 700; border-radius: 20px; }
+.btn-lg { padding: 20px; font-size: 1.25rem; font-weight: 700; border-radius: var(--radius); }
 .btn-block { width: 100%; display: flex; }
 
 .bottom-nav {
@@ -101,7 +102,7 @@ select.input {
     background: rgba(22, 22, 22, 0.85);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
-    border-radius: 30px;
+    border-radius: var(--radius);
     padding: 6px;
     width: 260px;
     justify-content: space-between;
@@ -136,7 +137,7 @@ select.input {
 
 .stat-card {
     background: var(--bg-card);
-    border-radius: 20px;
+    border-radius: var(--radius);
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -151,7 +152,7 @@ select.input {
 .stat-card:active { transform: scale(0.96); }
 .stat-card.large { min-height: 100px; padding: 20px; cursor: default; }
 .stat-card.large:active { transform: none; }
-.stat-card.small { padding: 14px 4px; border-radius: 18px; }
+.stat-card.small { padding: 14px 4px; border-radius: var(--radius); }
 
 .stat-num { font-size: 1.25rem; font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: -0.5px; }
 .stat-label { font-size: 0.75rem; color: var(--text-low); letter-spacing: -0.2px; font-weight: 600; margin-top: 6px; text-transform: uppercase; }
@@ -175,7 +176,7 @@ select.input {
 }
 ::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.12);
-    border-radius: 10px;
+    border-radius: var(--radius);
 }
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255,255,255,0.25);
@@ -195,7 +196,7 @@ select.input {
 .setting-item {
     display: flex; justify-content: space-between; align-items: center;
     width: 100%; padding: 15px 18px;
-    background: var(--bg-card); border-radius: 16px;
+    background: var(--bg-card); border-radius: var(--radius);
     border: 1px solid rgba(255,255,255,0.05);
 }
 
@@ -244,7 +245,7 @@ select.input {
     height: 100%;
     position: relative;
     background: var(--bg-card);
-    border-radius: 32px;
+    border-radius: var(--radius);
     border: 1px solid rgba(255,255,255,0.06);
     box-shadow: 0 15px 35px rgba(0,0,0,0.3);
     cursor: pointer;
@@ -279,15 +280,12 @@ select.input {
 /* --- TAGS --- */
 .status-tag, .level-tag {
     position: absolute; top: 25px;
-    padding: 6px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 800;
+    padding: 6px 12px; border-radius: var(--radius-input); font-size: 0.7rem; font-weight: 800;
     text-transform: uppercase; letter-spacing: 1px;
     z-index: 10;
 }
 .status-tag { right: 25px; }
 .level-tag { left: 25px; background: rgba(255,255,255,0.08); color: var(--text-med); }
-
-.status-tag.review { background: rgba(0,122,255,0.15); color: var(--primary); }
-.status-tag.new { background: rgba(48,209,88,0.15); color: #30d158; }
 
 .practice-glow {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -299,7 +297,7 @@ select.input {
 
 .swipe-feedback-content {
     display: flex; flex-direction: column; align-items: center; gap: 12px;
-    padding: 30px 40px; border-radius: 40px;
+    padding: 30px 40px; border-radius: var(--radius);
     background: rgba(10,10,10,0.6);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.1);
