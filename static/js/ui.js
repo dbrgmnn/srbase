@@ -180,6 +180,7 @@ const appRender = {
     practice: () => `
         <div class="practice-view" id="practiceView">
             <div class="practice-progress"><div class="practice-progress-inner" id="practiceProgressBar"></div></div>
+            <div id="practiceCounter" class="practice-counter"></div>
             <div id="practiceGlow" class="practice-glow">
                 <div class="swipe-feedback-content" id="swipeFeedback">
                     <div class="swipe-feedback-icon" id="swipeIcon"></div>

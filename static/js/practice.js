@@ -35,6 +35,11 @@ function renderSessionCard() {
         progressBar.style.width = `${progress}%`;
     }
 
+    const counter = document.getElementById('practiceCounter');
+    if (counter) {
+        counter.textContent = `${currentWordIndex + 1} / ${sessionWords.length}`;
+    }
+
     const card = document.getElementById('flashCard');
     if (!card) return;
 

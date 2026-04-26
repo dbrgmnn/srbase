@@ -218,6 +218,20 @@ select.input {
     box-shadow: 0 0 10px rgba(0, 122, 255, 0.3);
 }
 
+.practice-counter {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0) + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-low);
+    letter-spacing: 0.5px;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
 .practice-view {
     display: flex;
     flex-direction: column; 
