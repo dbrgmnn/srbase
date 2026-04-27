@@ -56,15 +56,12 @@ async def scheduler_loop(app):
                 next_check = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
             
             sleep_seconds = (next_check - now).total_seconds()
-            
-            next_check_local = next_check.astimezone(ZoneInfo(tz_name))
-            logger.info("Scheduler sleeping until: %s", next_check_local.strftime("%Y-%m-%d %H:%M:%S"))
             await asyncio.sleep(max(sleep_seconds, 1))
 
             # 2. Wake up and check all users
             now = datetime.now(ZoneInfo(tz_name))
-            current_hour_in_minutes = now.hour * 60
-            today_key = now.strftime("%Y-%m-%d-%H")
+            current_minutes = now.hour * 60 + now.minute
+            hour_key = now.strftime("%Y-%m-%d-%H")
 
             for user_id, chat_id in user_map.items():
                 user_languages = await app['user_repo'].get_all_user_languages(user_id)
@@ -73,32 +70,28 @@ async def scheduler_loop(app):
                     settings = await app['user_repo'].get_settings(user_id, lang)
                     target_time = settings.get("notification_time", -1)
                     
+                    # Off or not time yet
+                    if target_time == -1 or current_minutes < target_time:
+                        continue
+                        
                     sent_key = f"{user_id}_{lang}"
+                    if last_sent.get(sent_key) == hour_key:
+                        continue
+
+                    stats = await app['word_repo'].get_full_stats(user_id, lang, daily_limit=settings.get("daily_limit", 20))
+                    due = stats.get("due", 0) or 0
+                    threshold = settings.get("daily_limit", 20)
                     
-                    # Check if matches target hour and not sent yet
-                    if target_time != -1 and target_time == current_hour_in_minutes and last_sent.get(sent_key) != today_key:
-                        stats = await app['word_repo'].get_full_stats(user_id, lang, daily_limit=settings.get("daily_limit", 20))
-                        
-                        due = stats.get("due", 0) or 0
-                        # new in session is session_total minus due
+                    # Trigger only if reviews reach the daily limit threshold
+                    if due >= threshold:
                         new_in_session = (stats.get("session_total", 0) or 0) - due
+                        meta = lang_meta.get(lang, {"flag": "🌐", "name": lang.upper()})
                         
-                        if due > 0 or new_in_session > 0:
-                            meta = lang_meta.get(lang, {"flag": "🌐", "name": lang.upper()})
-                            msg = f"🔔 <b>Time to practice!</b>\n\n"
-                            msg += f"{meta['flag']} <b>{meta['name']}:</b> {due} review {new_in_session} new"
-                            
-                            user = await app['user_repo'].get_user(user_id)
-                            username = user.get('name', f"ID {user_id}") if user else f"ID {user_id}"
-                            
-                            logger.info("Notification sent: %s [%s] (due: %d, new: %d)", username, lang, due, new_in_session)
-                            await send_tg_push(token, chat_id, msg)
-                            last_sent[sent_key] = today_key
-                        else:
-                            # Optional: more descriptive log for no words
-                            pass
-                            # Mark as "sent" anyway, so we don't keep checking every minute if the loop logic changes
-                            last_sent[sent_key] = today_key
+                        msg = f"🔔 {meta['name']}: {due} review, {new_in_session} new"
+                        
+                        logger.info("Notification sent: ID %d [%s] (due: %d)", user_id, lang, due)
+                        await send_tg_push(token, chat_id, msg)
+                        last_sent[sent_key] = hour_key
 
         except Exception as e:
             logger.error("Error in scheduler loop: %s", e)
