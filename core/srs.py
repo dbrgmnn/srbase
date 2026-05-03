@@ -14,9 +14,9 @@ class ReviewResult:
 
 
 class SRSStatus:
-    NEW = "new"
+    TOTAL = "total"
+    DIFFICULT = "difficult"
     LEARNING = "learning"
-    KNOWN = "known"
     MASTERED = "mastered"
 
 

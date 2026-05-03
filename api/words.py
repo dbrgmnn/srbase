@@ -95,7 +95,7 @@ class WordHandler:
             
             if filter_type:
                 logger.info("SEARCH FILTER: user=%d, lang=%s, filter=%s", user_id, language, filter_type)
-                if filter_type in ["new", "learning", "known", "mastered"]:
+                if filter_type in ["total", "difficult", "learning", "mastered"]:
                     words = await repo.get_words_by_status(user_id, language, filter_type)
                 elif filter_type == "due":
                     words = await repo.get_session_words(user_id, language, 0)

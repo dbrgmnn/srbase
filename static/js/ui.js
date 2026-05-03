@@ -49,17 +49,17 @@ const appRender = {
                 </div>
 
                 <div class="dashboard-row row-stats">
-                    <div class="stat-card small" onclick="handleFilterClick('new')">
+                    <div class="stat-card small" onclick="handleFilterClick('total')">
                         <div class="stat-num" id="statQueue">0</div>
-                        <div class="stat-label">Queue</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-card small" onclick="handleFilterClick('difficult')">
+                        <div class="stat-num" id="statLearning" style="color:#ff9f0a;">0</div>
+                        <div class="stat-label" style="color:#ff9f0a; opacity:0.8;">Difficult</div>
                     </div>
                     <div class="stat-card small" onclick="handleFilterClick('learning')">
-                        <div class="stat-num" id="statLearning" style="color:#ff9f0a;">0</div>
-                        <div class="stat-label" style="color:#ff9f0a; opacity:0.8;">Learning</div>
-                    </div>
-                    <div class="stat-card small" onclick="handleFilterClick('known')">
                         <div class="stat-num" id="statKnown" style="color:#30d158;">0</div>
-                        <div class="stat-label" style="color:#30d158; opacity:0.8;">Known</div>
+                        <div class="stat-label" style="color:#30d158; opacity:0.8;">Learning</div>
                     </div>
                     <div class="stat-card small" onclick="handleFilterClick('mastered')">
                         <div class="stat-num" id="statMastered" style="color:#bf5af2;">0</div>

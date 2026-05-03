@@ -41,14 +41,14 @@ class WordRepo:
         return [dict(row) for row in rows]
 
     async def get_words_by_status(self, user_id: int, language: str, status: str) -> list[dict]:
-        """Get words filtered by learning status (new, learning, known, mastered)."""
+        """Get words filtered by learning status (total, difficult, learning, mastered)."""
         where_clause = ""
-        if status == SRSStatus.NEW:
-            where_clause = "AND started_at IS NULL"
+        if status == SRSStatus.TOTAL:
+            where_clause = ""  # Show all words
+        elif status == SRSStatus.DIFFICULT:
+            where_clause = "AND started_at IS NOT NULL AND easiness <= 1.3"
         elif status == SRSStatus.LEARNING:
-            where_clause = "AND started_at IS NOT NULL AND interval < 5"
-        elif status == SRSStatus.KNOWN:
-            where_clause = "AND started_at IS NOT NULL AND interval >= 5 AND interval < 30"
+            where_clause = "AND started_at IS NOT NULL AND interval < 30"
         elif status == SRSStatus.MASTERED:
             where_clause = "AND started_at IS NOT NULL AND interval >= 30"
         else:
@@ -238,9 +238,9 @@ class WordRepo:
                     COUNT(CASE WHEN created_at >= ? THEN 1 END) as today_added,
                     COUNT(CASE WHEN last_reviewed_at >= ? THEN 1 END) as today_reviewed,
                     COUNT(CASE WHEN started_at IS NULL THEN 1 END) as st_new,
-                    COUNT(CASE WHEN started_at IS NOT NULL AND interval < 5 THEN 1 END) as st_learning,
-                    COUNT(CASE WHEN started_at IS NOT NULL AND interval >= 5 AND interval < 30 THEN 1 END) as st_known,
-                    COUNT(CASE WHEN started_at IS NOT NULL AND interval >= 30 THEN 1 END) as st_mastered,
+                    COUNT(CASE WHEN started_at IS NOT NULL AND easiness <= 1.3 THEN 1 END) as difficult,
+                    COUNT(CASE WHEN started_at IS NOT NULL AND interval < 30 THEN 1 END) as learning,
+                    COUNT(CASE WHEN started_at IS NOT NULL AND interval >= 30 THEN 1 END) as mastered,
                     MIN(CASE WHEN started_at IS NOT NULL AND next_review > ? THEN next_review END) as next_due_at
                 FROM words WHERE user_id = ? AND language = ?""",
             (
@@ -263,9 +263,9 @@ class WordRepo:
             "today_added": 0,
             "today_reviewed": 0,
             "st_new": 0,
-            "st_learning": 0,
-            "st_known": 0,
-            "st_mastered": 0,
+            "difficult": 0,
+            "learning": 0,
+            "mastered": 0,
             "next_due_at": None,
             "session_total": 0,
             "next_day_start_utc": next_day_start.isoformat(),

@@ -65,10 +65,10 @@ async function updateStats() {
         const stats = res.data;
         const fields = {
             'statDue': stats.due || 0,
-            'statQueue': stats.st_new || 0,
-            'statLearning': stats.st_learning || 0,
-            'statKnown': stats.st_known || 0,
-            'statMastered': stats.st_mastered || 0,
+            'statQueue': stats.total || 0,
+            'statLearning': stats.difficult || 0,
+            'statKnown': stats.learning || 0,
+            'statMastered': stats.mastered || 0,
             'statLearnedToday': stats.today_reviewed || 0,
             'statAddedToday': stats.today_added || 0
         };
