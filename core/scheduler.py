@@ -39,6 +39,7 @@ async def scheduler_loop(app):
 
     tz_name = os.getenv("APP_TIMEZONE", "UTC")
     last_sent = {} # {f"{user_id}_{lang}": "YYYY-MM-DD-HH"}
+    last_backup_day = None
 
     lang_meta = {
         "de": {"flag": "🇩🇪", "name": "German"},
@@ -60,7 +61,38 @@ async def scheduler_loop(app):
 
             # 2. Wake up and check all users
             now = datetime.now(ZoneInfo(tz_name))
+            
+            # --- Daily DB Backup at 12:00 ---
+            if now.hour == 12 and last_backup_day != now.date():
+                backup_path = f"backup_{now.strftime('%Y%m%d')}.db"
+                try:
+                    admin_chat_id = list(user_map.values())[1] if len(user_map) >= 2 else list(user_map.values())[0]
+
+                    # Create hot backup
+                    await app['db'].execute(f"VACUUM INTO '{backup_path}'")
+
+                    # Send document
+                    url = f"https://api.telegram.org/bot{token}/sendDocument"
+                    data = aiohttp.FormData()
+                    data.add_field('chat_id', str(admin_chat_id))
+                    with open(backup_path, 'rb') as f:
+                        data.add_field('document', f, filename=backup_path)
+                        connector = aiohttp.TCPConnector(ssl=False)
+                        async with aiohttp.ClientSession(connector=connector) as session:
+                            async with session.post(url, data=data) as resp:
+                                if resp.status == 200:
+                                    logger.info("Daily backup sent to admin")
+                                    last_backup_day = now.date()
+                                else:
+                                    logger.error("Backup send failed: %s", await resp.text())
+                except Exception as be:
+                    logger.error("Backup process error: %s", be)
+                finally:
+                    if os.path.exists(backup_path):
+                        os.remove(backup_path)
+
             current_minutes = now.hour * 60 + now.minute
+
             hour_key = now.strftime("%Y-%m-%d-%H")
 
             for user_id, chat_id in user_map.items():
