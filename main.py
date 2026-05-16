@@ -1,7 +1,6 @@
 import asyncio
 import logging
-import os
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
 from aiohttp import web
 from db.models import init_db
 from db.user_repo import UserRepo
@@ -9,41 +8,22 @@ from db.word_repo import WordRepo
 from api.auth import auth_middleware
 from api.routes import setup_routes
 from core.scheduler import scheduler_loop
-
-# Load .env file manually if it exists
-if os.path.exists(".env"):
-    with open(".env") as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                key, value = line.split("=", 1)
-                os.environ[key.strip()] = value.strip()
+from core import config
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
-DB_PATH = os.getenv("DB_PATH", "srbase.db")
-APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
-APP_PORT = int(os.getenv("APP_PORT", 8080))
-TZ_NAME = os.getenv("APP_TIMEZONE", "UTC")
-
-try:
-    APP_TZ = ZoneInfo(TZ_NAME)
-except ZoneInfoNotFoundError:
-    logger.error("Invalid APP_TIMEZONE: %s. Falling back to UTC.", TZ_NAME)
-    APP_TZ = ZoneInfo("UTC")
-
 async def on_startup(app: web.Application):
     """Initialize resources on startup."""
-    db = await init_db(DB_PATH)
+    db = await init_db(config.DB_PATH)
     app['db'] = db
     app['user_repo'] = UserRepo(db)
-    app['word_repo'] = WordRepo(db, tz=APP_TZ)
+    app['word_repo'] = WordRepo(db, tz=config.APP_TZ)
     
     # Start the notification scheduler
     asyncio.create_task(scheduler_loop(app))
     
-    logger.info("Database connection established: %s", DB_PATH)
+    logger.info("Database connection established: %s", config.DB_PATH)
 
 async def on_cleanup(app: web.Application):
     """Gracefully close resources."""
@@ -83,5 +63,5 @@ def create_app() -> web.Application:
 
 if __name__ == "__main__":
     my_app = create_app()
-    logger.info("Starting app on %s:%d", APP_HOST, APP_PORT)
-    web.run_app(my_app, host=APP_HOST, port=APP_PORT)
+    logger.info("Starting app on %s:%d", config.APP_HOST, config.APP_PORT)
+    web.run_app(my_app, host=config.APP_HOST, port=config.APP_PORT)
