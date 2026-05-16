@@ -5,7 +5,7 @@ from aiohttp import web
 from db.models import init_db
 from db.user_repo import UserRepo
 from db.word_repo import WordRepo
-from api.auth import auth_middleware
+from api.auth import auth_middleware, no_cache_middleware
 from api.routes import setup_routes
 from core.scheduler import scheduler_loop
 from core import config
@@ -31,19 +31,6 @@ async def on_cleanup(app: web.Application):
         await app['db'].close()
         logger.info("Database connection closed")
 
-async def index_handler(_request):
-    """Serve the main index.html file."""
-    return web.FileResponse('./index.html')
-
-@web.middleware
-async def no_cache_middleware(request, handler):
-    response = await handler(request)
-    if isinstance(response, web.Response):
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-    return response
-
 def create_app() -> web.Application:
     """Factory to create the application instance."""
     instance = web.Application(middlewares=[no_cache_middleware, auth_middleware])
@@ -57,7 +44,6 @@ def create_app() -> web.Application:
     
     # Serve static files
     instance.router.add_static('/static', './static')
-    instance.router.add_get('/', index_handler)
     
     return instance
 

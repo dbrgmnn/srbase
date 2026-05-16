@@ -3,7 +3,14 @@ from api.auth import UserHandler
 from api.words import WordHandler
 from api.practice import PracticeHandler
 
+async def index_handler(_request):
+    """Serve the main index.html file."""
+    return web.FileResponse('./index.html')
+
 def setup_routes(app: web.Application):
+    # Main entry point
+    app.router.add_get('/', index_handler)
+
     # User routes
     app.router.add_get('/api/users/list', UserHandler.list_users)
     app.router.add_post('/api/users', UserHandler.access)
