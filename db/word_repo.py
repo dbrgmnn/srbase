@@ -27,6 +27,15 @@ class WordRepo:
         row = await cursor.fetchone()
         return dict(row) if row else None
 
+    async def get_word_by_text(self, user_id: int, language: str, word: str) -> dict | None:
+        """Retrieve a word by its exact spelling (case-insensitive) for a user and language."""
+        cursor = await self.db.execute(
+            "SELECT * FROM words WHERE user_id = ? AND language = ? AND LOWER(word) = LOWER(?)",
+            (user_id, language, word.strip()),
+        )
+        row = await cursor.fetchone()
+        return dict(row) if row else None
+
     async def search_words(self, user_id: int, language: str, query: str) -> list[dict]:
         """Search for words in the user's dictionary by word or translation."""
         q = f"%{query.lower()}%"

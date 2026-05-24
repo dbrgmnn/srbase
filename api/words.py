@@ -27,6 +27,12 @@ class WordHandler:
                 return web.json_response({"status": "error", "message": "Word and translation required"}, status=400)
 
             repo = request.app["word_repo"]
+            
+            # Check if the word already exists (case-insensitive, ignoring translation)
+            existing = await repo.get_word_by_text(user_id, language, word)
+            if existing:
+                return web.json_response({"status": "error", "message": "Word already exists"}, status=409)
+
             word_id = await repo.add_single_word(user_id, language, word, translation, example, level)
             
             if word_id:
