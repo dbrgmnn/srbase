@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data  # Persist SQLite database on the host machine
+    env_file:
+      - .env              # Load environment variables from .env file
+    restart: unless-stopped
