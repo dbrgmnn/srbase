@@ -6,7 +6,7 @@ from db.user_repo import UserRepo
 from db.word_repo import WordRepo
 from api.auth import auth_middleware, no_cache_middleware
 from api.routes import setup_routes
-from core.scheduler import scheduler_loop
+from core.scheduler import Scheduler
 from core import config
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,8 @@ async def on_startup(app: web.Application):
     app['word_repo'] = WordRepo(db, tz=config.APP_TZ)
     
     # Start the notification scheduler
-    asyncio.create_task(scheduler_loop(app))
+    scheduler = Scheduler(app)
+    asyncio.create_task(scheduler.run())
     
     logger.info("Database connection established: %s", config.DB_PATH)
 

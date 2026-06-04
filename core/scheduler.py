@@ -4,127 +4,177 @@ import os
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 import aiohttp
+from core import config
 
 logger = logging.getLogger(__name__)
 
-async def send_tg_push(token, chat_id, text):
-    """Send a simple text message via Telegram Bot API."""
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
-    try:
-        connector = aiohttp.TCPConnector(ssl=False)
-        async with aiohttp.ClientSession(connector=connector) as session:
-            async with session.post(url, json=payload) as resp:
-                if resp.status == 200:
-                    logger.info("TG notification sent successfully")
-                else:
-                    logger.error("TG error: %s", await resp.text())
-    except Exception as e:
-        logger.error("Failed to send TG notification: %s", e)
+LANG_META = {
+    "de": {"flag": "🇩🇪", "name": "German"},
+    "en": {"flag": "🇬🇧", "name": "English"}
+}
 
-async def scheduler_loop(app):
-    """Background task to notify users at their scheduled time."""
-    token = os.getenv("TG_TOKEN")
-    mapping_str = os.getenv("TG_MAPPING", "")
+class TelegramNotifier:
+    """Service to handle Telegram notifications."""
     
-    if not token or not mapping_str:
-        logger.warning("Scheduler disabled: TG_TOKEN or TG_MAPPING missing")
-        return
+    def __init__(self, token: str):
+        self.token = token
+        self.base_url = f"https://api.telegram.org/bot{token}"
 
-    try:
-        user_map = {int(p.split(':')[0]): p.split(':')[1] for p in mapping_str.split(',') if ':' in p}
-    except Exception as e:
-        logger.error("Invalid TG_MAPPING format: %s", e)
-        return
-
-    tz_name = os.getenv("APP_TIMEZONE", "UTC")
-    last_sent = {} # {f"{user_id}_{lang}": "YYYY-MM-DD-HH"}
-    last_backup_day = None
-
-    lang_meta = {
-        "de": {"flag": "🇩🇪", "name": "German"},
-        "en": {"flag": "🇬🇧", "name": "English"}
-    }
-
-    while True:
+    async def send_message(self, chat_id: str | int, text: str):
+        """Send a simple text message via Telegram Bot API."""
+        url = f"{self.base_url}/sendMessage"
+        payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
         try:
-            now = datetime.now(timezone.utc)
-            
-            # 1. Sleep until the next 30-minute mark (00 or 30)
-            if now.minute < 30:
-                next_check = now.replace(minute=30, second=0, microsecond=0)
-            else:
-                next_check = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
-            
-            sleep_seconds = (next_check - now).total_seconds()
-            await asyncio.sleep(max(sleep_seconds, 1))
-
-            # 2. Wake up and check all users
-            now = datetime.now(ZoneInfo(tz_name))
-            
-            # --- Daily DB Backup at 12:00 ---
-            if now.hour == 12 and last_backup_day != now.date():
-                backup_path = f"backup_{now.strftime('%Y%m%d')}.db"
-                try:
-                    admin_chat_id = list(user_map.values())[1] if len(user_map) >= 2 else list(user_map.values())[0]
-
-                    # Create hot backup
-                    await app['db'].execute(f"VACUUM INTO '{backup_path}'")
-
-                    # Send document
-                    url = f"https://api.telegram.org/bot{token}/sendDocument"
-                    data = aiohttp.FormData()
-                    data.add_field('chat_id', str(admin_chat_id))
-                    with open(backup_path, 'rb') as f:
-                        data.add_field('document', f, filename=backup_path)
-                        connector = aiohttp.TCPConnector(ssl=False)
-                        async with aiohttp.ClientSession(connector=connector) as session:
-                            async with session.post(url, data=data) as resp:
-                                if resp.status == 200:
-                                    logger.info("Daily backup sent to admin")
-                                    last_backup_day = now.date()
-                                else:
-                                    logger.error("Backup send failed: %s", await resp.text())
-                except Exception as be:
-                    logger.error("Backup process error: %s", be)
-                finally:
-                    if os.path.exists(backup_path):
-                        os.remove(backup_path)
-
-            current_minutes = now.hour * 60 + now.minute
-
-            hour_key = now.strftime("%Y-%m-%d-%H")
-
-            for user_id, chat_id in user_map.items():
-                user_languages = await app['user_repo'].get_all_user_languages(user_id)
-                
-                for lang in user_languages:
-                    settings = await app['user_repo'].get_settings(user_id, lang)
-                    target_time = settings.get("notification_time", -1)
-                    
-                    # Off or not time yet
-                    if target_time == -1 or current_minutes < target_time:
-                        continue
-                        
-                    sent_key = f"{user_id}_{lang}"
-                    if last_sent.get(sent_key) == hour_key:
-                        continue
-
-                    stats = await app['word_repo'].get_full_stats(user_id, lang, daily_limit=settings.get("daily_limit", 20))
-                    due = stats.get("due", 0) or 0
-                    threshold = settings.get("daily_limit", 20)
-                    
-                    # Trigger only if reviews reach the daily limit threshold
-                    if due >= threshold:
-                        new_in_session = (stats.get("session_total", 0) or 0) - due
-                        meta = lang_meta.get(lang, {"flag": "🌐", "name": lang.upper()})
-                        
-                        msg = f"🔔 {meta['name']}: {due} review, {new_in_session} new"
-                        
-                        logger.info("Notification sent: ID %d [%s] (due: %d)", user_id, lang, due)
-                        await send_tg_push(token, chat_id, msg)
-                        last_sent[sent_key] = hour_key
-
+            connector = aiohttp.TCPConnector(ssl=False)
+            async with aiohttp.ClientSession(connector=connector) as session:
+                async with session.post(url, json=payload) as resp:
+                    if resp.status == 200:
+                        logger.info("TG notification sent successfully")
+                    else:
+                        logger.error("TG error: %s", await resp.text())
         except Exception as e:
-            logger.error("Error in scheduler loop: %s", e)
-            await asyncio.sleep(60)
+            logger.error("Failed to send TG notification: %s", e)
+
+    async def send_document(self, chat_id: str | int, file_path: str, filename: str):
+        """Send a document via Telegram Bot API."""
+        url = f"{self.base_url}/sendDocument"
+        data = aiohttp.FormData()
+        data.add_field('chat_id', str(chat_id))
+        try:
+            with open(file_path, 'rb') as f:
+                data.add_field('document', f, filename=filename)
+                connector = aiohttp.TCPConnector(ssl=False)
+                async with aiohttp.ClientSession(connector=connector) as session:
+                    async with session.post(url, data=data) as resp:
+                        if resp.status == 200:
+                            logger.info("TG document sent successfully")
+                            return True
+                        else:
+                            logger.error("TG document error: %s", await resp.text())
+                            return False
+        except Exception as e:
+            logger.error("Failed to send TG document: %s", e)
+            return False
+
+class Scheduler:
+    """Background task manager for notifications and maintenance."""
+    
+    def __init__(self, app):
+        self.app = app
+        self.token = config.TG_TOKEN
+        self.tz_name = config.TZ_NAME
+        self.user_map = self._parse_user_map(config.TG_MAPPING)
+        self.notifier = TelegramNotifier(self.token) if self.token else None
+        
+        self.last_sent = {}  # {f"{user_id}_{lang}": "YYYY-MM-DD-HH"}
+        self.last_backup_day = None
+
+    @staticmethod
+    def _parse_user_map(mapping_str: str) -> dict:
+        if not mapping_str:
+            return {}
+        try:
+            return {int(p.split(':')[0]): p.split(':')[1] for p in mapping_str.split(',') if ':' in p}
+        except Exception as e:
+            logger.error("Invalid TG_MAPPING format: %s", e)
+            return {}
+
+    async def run(self):
+        """Main loop for the scheduler."""
+        if not self.notifier or not self.user_map:
+            logger.warning("Scheduler disabled: TG_TOKEN or TG_MAPPING missing")
+            return
+
+        logger.info("Scheduler started")
+        while True:
+            try:
+                await self._wait_until_next_tick()
+                await self._tick()
+            except Exception as e:
+                logger.error("Error in scheduler loop: %s", e)
+                await asyncio.sleep(60)
+
+    @staticmethod
+    async def _wait_until_next_tick():
+        """Sleep until the next 30-minute mark (00 or 30)."""
+        now = datetime.now(timezone.utc)
+        if now.minute < 30:
+            next_check = now.replace(minute=30, second=0, microsecond=0)
+        else:
+            next_check = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+
+        sleep_seconds = (next_check - now).total_seconds()
+        await asyncio.sleep(max(sleep_seconds, 1))
+
+    async def _tick(self):
+        """Run periodic tasks."""
+        if not self.notifier:
+            return
+
+        now = datetime.now(ZoneInfo(self.tz_name))
+        
+        await self._handle_backups(now)
+        await self._handle_notifications(now)
+
+    async def _handle_backups(self, now: datetime):
+        """Daily DB Backup at 12:00."""
+        if not self.notifier:
+            return
+
+        if now.hour == 12 and self.last_backup_day != now.date():
+            backup_path = f"backup_{now.strftime('%Y%m%d')}.db"
+            try:
+                # Use first or second user as admin (matching old logic)
+                admin_chat_id = list(self.user_map.values())[1] if len(self.user_map) >= 2 else list(self.user_map.values())[0]
+
+                # Create hot backup
+                await self.app['db'].execute(f"VACUUM INTO '{backup_path}'")
+
+                # Send document
+                success = await self.notifier.send_document(admin_chat_id, backup_path, backup_path)
+                if success:
+                    logger.info("Daily backup sent to admin")
+                    self.last_backup_day = now.date()
+            except Exception as e:
+                logger.error("Backup process error: %s", e)
+            finally:
+                if os.path.exists(backup_path):
+                    os.remove(backup_path)
+
+    async def _handle_notifications(self, now: datetime):
+        """Periodic user notifications."""
+        if not self.notifier:
+            return
+
+        current_minutes = now.hour * 60 + now.minute
+        hour_key = now.strftime("%Y-%m-%d-%H")
+
+        for user_id, chat_id in self.user_map.items():
+            user_languages = await self.app['user_repo'].get_all_user_languages(user_id)
+            
+            for lang in user_languages:
+                settings = await self.app['user_repo'].get_settings(user_id, lang)
+                target_time = settings.get("notification_time", -1)
+                
+                # Off or not time yet
+                if target_time == -1 or current_minutes < target_time:
+                    continue
+                    
+                sent_key = f"{user_id}_{lang}"
+                if self.last_sent.get(sent_key) == hour_key:
+                    continue
+
+                stats = await self.app['word_repo'].get_full_stats(user_id, lang, daily_limit=settings.get("daily_limit", 20))
+                due = stats.get("due", 0) or 0
+                threshold = settings.get("daily_limit", 20)
+                
+                # Trigger only if reviews reach the daily limit threshold
+                if due >= threshold:
+                    new_in_session = (stats.get("session_total", 0) or 0) - due
+                    meta = LANG_META.get(lang, {"flag": "🌐", "name": lang.upper()})
+                    
+                    msg = f"🔔 {meta['name']}: {due} review, {new_in_session} new"
+                    
+                    logger.info("Notification sent: ID %d [%s] (due: %d)", user_id, lang, due)
+                    await self.notifier.send_message(chat_id, msg)
+                    self.last_sent[sent_key] = hour_key
