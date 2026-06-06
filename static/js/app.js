@@ -103,6 +103,9 @@ function handleSearch(query) {
         return; 
     }
     
+    lastSearchQuery = query;
+    lastFilterType = null;
+    
     searchTimeout = setTimeout(async () => {
         const res = await API.request(`/api/words/search?q=${encodeURIComponent(query)}&lang=${currentLanguage}`);
         renderSearchResults(res.data || [], query);
@@ -237,6 +240,8 @@ async function handleDeleteWord(id) {
 }
 
 async function handleFilterClick(filterType) {
+    lastFilterType = filterType;
+    lastSearchQuery = '';
     toggleView('search');
     
     const inputEl = document.getElementById('searchInput');
@@ -250,6 +255,23 @@ async function handleFilterClick(filterType) {
 }
 
 let editingWordId = null;
+let lastSearchQuery = '';
+let lastFilterType = null;
+let shouldRestoreSearch = false;
+
+async function restoreSearchState() {
+    const container = document.getElementById('searchResults');
+    if (container) container.innerHTML = '<div style="text-align:center; padding:100px; color:var(--text-low); font-size:1.1rem;">Restoring...</div>';
+
+    if (lastFilterType) {
+        const res = await API.request(`/api/words/search?filter=${lastFilterType}&lang=${currentLanguage}`);
+        renderSearchResults(res.data || []);
+    } else if (lastSearchQuery) {
+        const res = await API.request(`/api/words/search?q=${encodeURIComponent(lastSearchQuery)}&lang=${currentLanguage}`);
+        renderSearchResults(res.data || [], lastSearchQuery);
+    }
+}
+
 
 function openEditWord(id, word, translation, example, level) {
     editingWordId = id;
@@ -277,6 +299,7 @@ function openEditWord(id, word, translation, example, level) {
 function cancelWordEdit() {
     if (editingWordId) {
         editingWordId = null;
+        shouldRestoreSearch = true;
         toggleView('search');
     } else {
         toggleView('home');
@@ -294,6 +317,7 @@ async function handleEditWordSubmit() {
     const res = await API.request(`/api/words/${editingWordId}`, 'PATCH', { word, translation, example, level });
     if (res.status === 'ok') {
         editingWordId = null;
+        shouldRestoreSearch = true;
         toggleView('search');
     } else {
         alert(res.message || "Failed to update");
@@ -338,13 +362,21 @@ function toggleView(type) {
     // Show selected
     if (type === 'search') {
         if (searchPanel) searchPanel.classList.add('active');
-        const inputEl = document.getElementById('searchInput');
-        if (inputEl) {
-            inputEl.value = '';
-            setTimeout(() => inputEl.focus(), 50); 
+        
+        if (shouldRestoreSearch) {
+            const inputEl = document.getElementById('searchInput');
+            if (inputEl) inputEl.value = lastSearchQuery;
+            restoreSearchState();
+            shouldRestoreSearch = false; 
+        } else {
+            const inputEl = document.getElementById('searchInput');
+            if (inputEl) {
+                inputEl.value = '';
+                setTimeout(() => inputEl.focus(), 50); 
+            }
+            const resultsEl = document.getElementById('searchResults');
+            if (resultsEl) resultsEl.innerHTML = '';
         }
-        const resultsEl = document.getElementById('searchResults');
-        if (resultsEl) resultsEl.innerHTML = '';
     } else if (type === 'settings') {
         if (settingsPanel) settingsPanel.classList.add('active');
     } else if (type === 'addWord') {
