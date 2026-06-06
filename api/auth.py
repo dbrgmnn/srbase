@@ -4,6 +4,24 @@ from aiohttp import web
 logger = logging.getLogger(__name__)
 
 @web.middleware
+async def error_middleware(request, handler):
+    try:
+        return await handler(request)
+    except web.HTTPException as ex:
+        if ex.status >= 400:
+            return web.json_response(
+                {"status": "error", "message": ex.reason},
+                status=ex.status
+            )
+        raise
+    except Exception as e:
+        logger.error("Unhandled exception: %s", e)
+        return web.json_response(
+            {"status": "error", "message": "Internal server error"},
+            status=500
+        )
+
+@web.middleware
 async def no_cache_middleware(request, handler):
     response = await handler(request)
     if isinstance(response, web.Response):
@@ -44,7 +62,7 @@ class UserHandler:
     async def list_users(request: web.Request) -> web.Response:
         """Get all registered users."""
         users = await request.app["user_repo"].list_users()
-        return web.json_response({"status": "ok", "data": users})
+        return web.json_response({"status": "ok", "message": "Users retrieved", "data": users})
 
 
     @staticmethod
@@ -67,7 +85,7 @@ class UserHandler:
                 user_id = await repo.create_user(name, email)
                 user = {"id": user_id, "name": name, "email": email}
 
-            return web.json_response({"status": "ok", "user": dict(user)})
+            return web.json_response({"status": "ok", "message": "User access granted", "user": dict(user)})
 
         except Exception as e:
             logger.error("User access error: %s", e)
@@ -80,7 +98,7 @@ class UserHandler:
         user = await request.app["user_repo"].get_user(user_id)
         if not user:
             return web.json_response({"status": "error", "message": "User not found"}, status=404)
-        return web.json_response({"status": "ok", "user": user})
+        return web.json_response({"status": "ok", "message": "User information retrieved", "user": user})
 
     @staticmethod
     async def delete_me(request: web.Request) -> web.Response:
@@ -88,7 +106,7 @@ class UserHandler:
         user_id = request["user_id"]
         repo = request.app["user_repo"]
         await repo.delete_user(user_id)
-        return web.json_response({"status": "ok"})
+        return web.json_response({"status": "ok", "message": "User deleted"})
 
     @staticmethod
     async def update_me(request: web.Request) -> web.Response:
@@ -113,7 +131,7 @@ class UserHandler:
         if not name and not email:
             return web.json_response({"status": "error", "message": "Name or email required"}, status=400)
             
-        return web.json_response({"status": "ok"})
+        return web.json_response({"status": "ok", "message": "User updated"})
 
     @staticmethod
     async def get_settings(request: web.Request) -> web.Response:
@@ -121,7 +139,7 @@ class UserHandler:
         user_id = request["user_id"]
         lang = request.query.get("lang", "de").strip()
         settings = await request.app["user_repo"].get_settings(user_id, lang)
-        return web.json_response({"status": "ok", "settings": settings})
+        return web.json_response({"status": "ok", "message": "Settings retrieved", "settings": settings})
 
     @staticmethod
     async def update_settings(request: web.Request) -> web.Response:
@@ -133,7 +151,7 @@ class UserHandler:
         notif_time = data.get("notification_time")
         
         await request.app["user_repo"].update_settings(user_id, lang, daily_limit=limit, notification_time=notif_time)
-        return web.json_response({"status": "ok"})
+        return web.json_response({"status": "ok", "message": "Settings updated"})
 
 
 

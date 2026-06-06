@@ -4,7 +4,7 @@ from aiohttp import web
 from db.models import init_db
 from db.user_repo import UserRepo
 from db.word_repo import WordRepo
-from api.auth import auth_middleware, no_cache_middleware
+from api.auth import auth_middleware, no_cache_middleware, error_middleware
 from api.routes import setup_routes
 from core.scheduler import Scheduler
 from core import config
@@ -32,7 +32,7 @@ async def on_cleanup(app: web.Application):
 
 def create_app() -> web.Application:
     """Factory to create the application instance."""
-    instance = web.Application(middlewares=[no_cache_middleware, auth_middleware])
+    instance = web.Application(middlewares=[no_cache_middleware, error_middleware, auth_middleware])
     
     # Register signals
     instance.on_startup.append(on_startup)

@@ -30,7 +30,7 @@ class PracticeHandler:
             
             words = await word_repo.get_session_words(user_id, language, new_limit=new_limit)
             
-            return web.json_response({"status": "ok", "data": words})
+            return web.json_response({"status": "ok", "message": "Session words retrieved", "data": words})
         except Exception as e:
             logger.error("Session error: %s", e)
             return web.json_response({"status": "error", "message": "Internal server error"}, status=500)
@@ -73,7 +73,7 @@ class PracticeHandler:
                 result.next_review
             )
 
-            return web.json_response({"status": "ok", "next_review": result.next_review})
+            return web.json_response({"status": "ok", "message": "Answer processed", "next_review": result.next_review})
 
         except Exception as e:
             logger.error("Answer error: %s", e)
@@ -102,7 +102,7 @@ class PracticeHandler:
                 started_at=data.get("started_at")
             )
 
-            return web.json_response({"status": "ok"})
+            return web.json_response({"status": "ok", "message": "Review undone"})
         except Exception as e:
             logger.error("Undo error: %s", e)
             return web.json_response({"status": "error", "message": "Internal server error"}, status=500)

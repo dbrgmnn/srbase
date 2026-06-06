@@ -36,7 +36,7 @@ class WordHandler:
             word_id = await repo.add_single_word(user_id, language, word, translation, example, level)
             
             if word_id:
-                return web.json_response({"status": "ok", "id": word_id})
+                return web.json_response({"status": "ok", "message": "Word added", "id": word_id})
             return web.json_response({"status": "error", "message": "Word already exists"}, status=409)
 
         except Exception as e:
@@ -62,7 +62,7 @@ class WordHandler:
             try:
                 ok = await repo.update_word_text(word_id, user_id, word, translation, example, level)
                 if ok:
-                    return web.json_response({"status": "ok"})
+                    return web.json_response({"status": "ok", "message": "Word updated"})
                 return web.json_response({"status": "error", "message": "Word not found"}, status=404)
             except ValueError as e:
                 if str(e) == "Duplicate word/translation":
@@ -80,7 +80,7 @@ class WordHandler:
             word_id = int(request.match_info["word_id"])
             repo = request.app["word_repo"]
             await repo.delete_word(word_id, user_id)
-            return web.json_response({"status": "ok"})
+            return web.json_response({"status": "ok", "message": "Word deleted"})
         except Exception as e:
             logger.error("Delete word error: %s", e)
             return web.json_response({"status": "error", "message": "Internal server error"}, status=500)
@@ -112,11 +112,11 @@ class WordHandler:
                 else:
                     words = []
                 
-                return web.json_response({"status": "ok", "data": words})
+                return web.json_response({"status": "ok", "message": "Words retrieved", "data": words})
 
-            if not query: return web.json_response({"status": "ok", "data": []})
+            if not query: return web.json_response({"status": "ok", "message": "No query provided", "data": []})
             words = await repo.search_words(user_id, language, query)
-            return web.json_response({"status": "ok", "data": words})
+            return web.json_response({"status": "ok", "message": "Words retrieved", "data": words})
         except Exception as e:
             logger.error("Search error: %s", e)
             return web.json_response({"status": "error", "message": "Internal server error"}, status=500)
@@ -135,7 +135,7 @@ class WordHandler:
             daily_limit = settings.get("daily_limit", 20)
             repo = request.app["word_repo"]
             stats = await repo.get_full_stats(user_id, language, daily_limit=daily_limit)
-            return web.json_response({"status": "ok", "data": stats})
+            return web.json_response({"status": "ok", "message": "Stats retrieved", "data": stats})
         except Exception as e:
             logger.error("Stats error: %s", e)
             return web.json_response({"status": "error", "message": "Internal server error"}, status=500)
