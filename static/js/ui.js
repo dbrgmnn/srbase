@@ -124,11 +124,13 @@ const appRender = {
             ? `<div style="display:flex; flex-direction:column; gap:10px; width:100%;">
                     <input id="editName" class="input" style="margin:0;" placeholder="Name">
                     <input id="editEmail" class="input" style="margin:0;" placeholder="Email">
+                    <input id="editTelegramChatId" class="input" style="margin:0;" placeholder="TG ID (Optional)">
                </div>`
             : `<div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
                     <div>
                         <div id="settingsUserName" style="color:#fff; font-size:1.15rem; font-weight:700;"></div>
                         <div id="settingsUserEmail" style="color:var(--text-low); font-size:0.9rem; margin-top:4px;"></div>
+                        <div id="settingsUserTelegram" style="color:var(--text-low); font-size:0.9rem; margin-top:4px;"></div>
                     </div>
                     <span onclick="renderSettingsPanel(true)" style="cursor:pointer; color:var(--text-low); padding:4px; transition:color 0.2s;" onmouseenter="this.style.color='var(--primary)'" onmouseleave="this.style.color='var(--text-low)'">${pencilIcon}</span>
                 </div>`;
@@ -173,10 +175,6 @@ const appRender = {
                         <option value="-1" ${userSettings.notification_time === -1 ? 'selected' : ''}>Off</option>
                         ${Array.from({length: 18}, (_, i) => i + 6).map(v => `<option value="${v * 60}" ${userSettings.notification_time === v * 60 ? 'selected' : ''}>${v}:00</option>`).join('')}
                     </select>
-                </div>
-                <div class="setting-item">
-                    <span style="color:var(--text-high); font-weight:500;">Telegram Chat ID</span>
-                    <input type="text" class="input" style="width: 140px; height: 38px; padding: 0 12px; margin: 0; text-align: right; border:none; background:transparent; color:var(--text-high);" placeholder="Not set" value="${currentUser.telegram_chat_id || ''}" onchange="saveTelegramChatId(this.value)">
                 </div>
             </div>
         `;

@@ -33,6 +33,10 @@ function renderHub() {
     if (nameEl) nameEl.textContent = currentUser.name;
     const emailEl = document.getElementById('settingsUserEmail');
     if (emailEl) emailEl.textContent = currentUser.email;
+    const telegramEl = document.getElementById('settingsUserTelegram');
+    if (telegramEl) {
+        telegramEl.textContent = currentUser.telegram_chat_id ? `TG ID: ${currentUser.telegram_chat_id}` : 'TG ID: Not set';
+    }
 }
 
 async function loadProfiles() {
@@ -418,15 +422,6 @@ async function saveNotificationTime(val) {
     }
 }
 
-async function saveTelegramChatId(val) {
-    const res = await API.request('/api/me', 'PUT', { telegram_chat_id: val.trim() });
-    if (res.status === 'ok') {
-        currentUser.telegram_chat_id = val.trim() || null;
-    } else {
-        alert(res.message || "Failed to update Telegram Chat ID");
-    }
-}
-
 async function changeLanguage(lang) {
     currentLanguage = lang;
     const res = await API.request(`/api/me/settings?lang=${currentLanguage}`);
@@ -443,11 +438,17 @@ function renderSettingsPanel(edit) {
         if (nameInput) nameInput.value = currentUser.name;
         const emailInput = document.getElementById('editEmail');
         if (emailInput) emailInput.value = currentUser.email;
+        const telegramInput = document.getElementById('editTelegramChatId');
+        if (telegramInput) telegramInput.value = currentUser.telegram_chat_id || '';
     } else {
         const nameEl = document.getElementById('settingsUserName');
         if (nameEl) nameEl.textContent = currentUser.name;
         const emailEl = document.getElementById('settingsUserEmail');
         if (emailEl) emailEl.textContent = currentUser.email;
+        const telegramEl = document.getElementById('settingsUserTelegram');
+        if (telegramEl) {
+            telegramEl.textContent = currentUser.telegram_chat_id ? `TG ID: ${currentUser.telegram_chat_id}` : 'TG ID: Not set';
+        }
     }
 }
 
@@ -463,13 +464,15 @@ async function handleCreateProfile() {
 async function saveProfile() { 
     const name = document.getElementById('editName').value.trim(); 
     const email = document.getElementById('editEmail').value.trim().toLowerCase();
+    const telegram_chat_id = document.getElementById('editTelegramChatId').value.trim();
     
     if (!name || !email) return alert("Name and email are required"); 
     
-    const res = await API.request('/api/me', 'PUT', { name, email }); 
+    const res = await API.request('/api/me', 'PUT', { name, email, telegram_chat_id }); 
     if (res.status === 'ok') { 
         currentUser.name = name; 
         currentUser.email = email;
+        currentUser.telegram_chat_id = telegram_chat_id || null;
         renderSettingsPanel(false); 
     } else {
         alert(res.message || "Failed to update profile");
