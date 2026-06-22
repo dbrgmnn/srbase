@@ -94,8 +94,8 @@ class UserRepo:
         row = await cursor.fetchone()
         return dict(row) if row else {}
 
-    async def update_settings(self, user_id: int, language: str, daily_limit: int | None = None, notification_time: int | None = None):
-        """Update user settings (limit and notification time) gracefully."""
+    async def update_settings(self, user_id: int, language: str, daily_limit: int | None = None, notification_time: int | None = None, notification_threshold: int | None = None):
+        """Update user settings (limit, notification time and notification threshold) gracefully."""
         # 1. Ensure the setting row exists
         await self._ensure_settings(user_id, language)
 
@@ -108,6 +108,9 @@ class UserRepo:
         if notification_time is not None:
             fields.append("notification_time = ?")
             params.append(notification_time)
+        if notification_threshold is not None:
+            fields.append("notification_threshold = ?")
+            params.append(notification_threshold)
         
         if fields:
             params.extend([user_id, language])
@@ -122,6 +125,7 @@ class UserRepo:
         changes = []
         if daily_limit is not None: changes.append(f"limit={daily_limit}")
         if notification_time is not None: changes.append(f"notif={notification_time}m")
+        if notification_threshold is not None: changes.append(f"threshold={notification_threshold}")
         
         logger.info("Settings updated: %s [%s] -> %s", username, language, ", ".join(changes))
 

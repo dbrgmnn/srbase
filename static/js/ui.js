@@ -164,13 +164,19 @@ const appRender = {
                     </select>
                 </div>
                 <div class="setting-item">
-                    <span style="color:var(--text-high); font-weight:500;">Daily Limit</span>
+                    <span style="color:var(--text-high); font-weight:500;">Daily New</span>
                     <select class="input" style="width: auto; height: 38px; padding: 0 12px; margin: 0; text-align: right; border:none; background:transparent;" onchange="saveLimit(this.value)">
-                        ${[5, 10, 20, 30, 40].map(v => `<option value="${v}" ${userSettings.daily_limit === v ? 'selected' : ''}>${v} words</option>`).join('')}
+                        ${[1, 5, 10, 15, 20, 30, 40].map(v => `<option value="${v}" ${userSettings.daily_limit === v ? 'selected' : ''}>${v} word${v > 1 ? 's' : ''}</option>`).join('')}
                     </select>
                 </div>
                 <div class="setting-item">
-                    <span style="color:var(--text-high); font-weight:500;">Notification Time</span>
+                    <span style="color:var(--text-high); font-weight:500;">Notify at</span>
+                    <select class="input" style="width: auto; height: 38px; padding: 0 12px; margin: 0; text-align: right; border:none; background:transparent;" onchange="saveNotificationThreshold(this.value)">
+                        ${[1, 5, 10, 15, 20, 30, 40].map(v => `<option value="${v}" ${(userSettings.notification_threshold ?? 1) === v ? 'selected' : ''}>${v} word${v > 1 ? 's' : ''}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <span style="color:var(--text-high); font-weight:500;">Notify Time</span>
                     <select class="input" style="width: auto; height: 38px; padding: 0 12px; margin: 0; text-align: right; border:none; background:transparent;" onchange="saveNotificationTime(this.value)">
                         <option value="-1" ${userSettings.notification_time === -1 ? 'selected' : ''}>Off</option>
                         ${Array.from({length: 18}, (_, i) => i + 6).map(v => `<option value="${v * 60}" ${userSettings.notification_time === v * 60 ? 'selected' : ''}>${v}:00</option>`).join('')}

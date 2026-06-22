@@ -422,6 +422,13 @@ async function saveNotificationTime(val) {
     }
 }
 
+async function saveNotificationThreshold(val) {
+    const res = await API.request('/api/me/settings', 'PUT', { lang: currentLanguage, notification_threshold: parseInt(val) });
+    if (res.status === 'ok') {
+        userSettings.notification_threshold = parseInt(val);
+    }
+}
+
 async function changeLanguage(lang) {
     currentLanguage = lang;
     const res = await API.request(`/api/me/settings?lang=${currentLanguage}`);

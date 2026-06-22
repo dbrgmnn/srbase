@@ -16,6 +16,7 @@ async def init_db(db_path: str) -> aiosqlite.Connection:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE
+            telegram_chat_id TEXT
         )
     """)
     await db.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
@@ -26,6 +27,7 @@ async def init_db(db_path: str) -> aiosqlite.Connection:
             language TEXT DEFAULT 'de',
             daily_limit INTEGER DEFAULT 20,
             notification_time INTEGER DEFAULT 720,
+            notification_threshold INTEGER DEFAULT 1,
             PRIMARY KEY (user_id, language),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
@@ -63,7 +65,8 @@ async def init_db(db_path: str) -> aiosqlite.Connection:
         current_version = row[0] if row else 0
 
     migrations = {
-        1: "ALTER TABLE users ADD COLUMN telegram_chat_id TEXT;"
+        1: "ALTER TABLE users ADD COLUMN telegram_chat_id TEXT;",
+        2: "ALTER TABLE user_settings ADD COLUMN notification_threshold INTEGER DEFAULT 1;"
     }
     for version, sql in sorted(migrations.items()):
         if version > current_version:

@@ -157,10 +157,10 @@ class Scheduler:
 
                 stats = await self.app['word_repo'].get_full_stats(user_id, lang, daily_limit=settings.get("daily_limit", 20))
                 due = stats.get("due", 0) or 0
-                threshold = settings.get("daily_limit", 20)
+                threshold = settings.get("notification_threshold", 1)
                 text_lang = lang.upper()
                 
-                # Trigger only if reviews reach the daily limit threshold
+                # Trigger only if reviews reach the notification threshold
                 if due >= threshold:
                     new_in_session = (stats.get("session_total", 0) or 0) - due
                     

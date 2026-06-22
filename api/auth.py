@@ -156,8 +156,14 @@ class UserHandler:
         lang = data.get("lang", "de").strip()
         limit = data.get("daily_limit")
         notif_time = data.get("notification_time")
+        notif_threshold = data.get("notification_threshold")
         
-        await request.app["user_repo"].update_settings(user_id, lang, daily_limit=limit, notification_time=notif_time)
+        await request.app["user_repo"].update_settings(
+            user_id, lang,
+            daily_limit=limit,
+            notification_time=notif_time,
+            notification_threshold=notif_threshold,
+        )
         return web.json_response({"status": "ok", "message": "Settings updated"})
 
 
