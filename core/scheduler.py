@@ -2,16 +2,11 @@ import asyncio
 import logging
 import os
 from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
 import aiohttp
 from core import config
 
 logger = logging.getLogger(__name__)
 
-LANG_META = {
-    "de": {"flag": "🇩🇪", "name": "German"},
-    "en": {"flag": "🇬🇧", "name": "English"}
-}
 
 class TelegramNotifier:
     """Service to handle Telegram notifications."""
@@ -62,7 +57,7 @@ class Scheduler:
     def __init__(self, app):
         self.app = app
         self.token = config.TG_TOKEN
-        self.tz_name = config.TZ_NAME
+        self.tz = config.APP_TZ
         self.user_map = self._parse_user_map(config.TG_MAPPING)
         self.notifier = TelegramNotifier(self.token) if self.token else None
         
@@ -111,7 +106,7 @@ class Scheduler:
         if not self.notifier:
             return
 
-        now = datetime.now(ZoneInfo(self.tz_name))
+        now = datetime.now(self.tz)
         
         await self._handle_backups(now)
         await self._handle_notifications(now)
@@ -167,13 +162,13 @@ class Scheduler:
                 stats = await self.app['word_repo'].get_full_stats(user_id, lang, daily_limit=settings.get("daily_limit", 20))
                 due = stats.get("due", 0) or 0
                 threshold = settings.get("daily_limit", 20)
+                text_lang = lang.upper()
                 
                 # Trigger only if reviews reach the daily limit threshold
                 if due >= threshold:
                     new_in_session = (stats.get("session_total", 0) or 0) - due
-                    meta = LANG_META.get(lang, {"flag": "🌐", "name": lang.upper()})
                     
-                    msg = f"🔔 {meta['name']}: {due} review, {new_in_session} new"
+                    msg = f"🔔 {text_lang}: {due} review, {new_in_session} new"
                     
                     logger.info("Notification sent: ID %d [%s] (due: %d)", user_id, lang, due)
                     await self.notifier.send_message(chat_id, msg)
