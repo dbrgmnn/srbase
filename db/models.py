@@ -15,7 +15,7 @@ async def init_db(db_path: str) -> aiosqlite.Connection:
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
-            email TEXT NOT NULL UNIQUE
+            email TEXT NOT NULL UNIQUE,
             telegram_chat_id TEXT
         )
     """)
