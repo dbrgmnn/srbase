@@ -1,5 +1,4 @@
 import logging
-
 import aiosqlite
 
 logger = logging.getLogger(__name__)
@@ -61,6 +60,18 @@ class UserRepo:
         await self.db.commit()
         logger.info("User %d email updated to %s", user_id, email)
 
+    async def update_user_telegram_chat_id(self, user_id: int, telegram_chat_id: str | None):
+        """Update user Telegram Chat ID."""
+        await self.db.execute("UPDATE users SET telegram_chat_id = ? WHERE id = ?", (telegram_chat_id, user_id))
+        await self.db.commit()
+        logger.info("User %d telegram_chat_id updated to %s", user_id, telegram_chat_id)
+
+    async def get_users_with_telegram(self) -> list[dict]:
+        """Get all users who have registered a Telegram chat ID."""
+        cursor = await self.db.execute("SELECT id, telegram_chat_id FROM users WHERE telegram_chat_id IS NOT NULL AND telegram_chat_id != ''")
+        rows = await cursor.fetchall()
+        return [dict(r) for r in rows]
+
 
     # --- SETTINGS OPERATIONS ---
 
@@ -83,7 +94,7 @@ class UserRepo:
         row = await cursor.fetchone()
         return dict(row) if row else {}
 
-    async def update_settings(self, user_id: int, language: str, daily_limit: int = None, notification_time: int = None):
+    async def update_settings(self, user_id: int, language: str, daily_limit: int | None = None, notification_time: int | None = None):
         """Update user settings (limit and notification time) gracefully."""
         # 1. Ensure the setting row exists
         await self._ensure_settings(user_id, language)

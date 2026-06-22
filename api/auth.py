@@ -110,7 +110,7 @@ class UserHandler:
 
     @staticmethod
     async def update_me(request: web.Request) -> web.Response:
-        """Update the current user profile (name and email)."""
+        """Update the current user profile (name, email, and telegram_chat_id)."""
         user_id = request["user_id"]
         data = await request.json()
         name = data.get("name", "").strip()
@@ -128,8 +128,15 @@ class UserHandler:
                 return web.json_response({"status": "error", "message": "Email already in use"}, status=400)
             await repo.update_user_email(user_id, email)
             
-        if not name and not email:
-            return web.json_response({"status": "error", "message": "Name or email required"}, status=400)
+        if "telegram_chat_id" in data:
+            telegram_chat_id = data.get("telegram_chat_id")
+            val = telegram_chat_id.strip() if telegram_chat_id else None
+            if val == "":
+                val = None
+            await repo.update_user_telegram_chat_id(user_id, val)
+            
+        if not name and not email and "telegram_chat_id" not in data:
+            return web.json_response({"status": "error", "message": "Name, email or telegram_chat_id required"}, status=400)
             
         return web.json_response({"status": "ok", "message": "User updated"})
 

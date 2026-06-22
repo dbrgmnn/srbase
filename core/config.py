@@ -25,4 +25,4 @@ except ZoneInfoNotFoundError:
 
 # Telegram Settings
 TG_TOKEN = os.getenv("TG_TOKEN")
-TG_MAPPING = os.getenv("TG_MAPPING", "")
+TG_ADMIN = os.getenv("TG_ADMIN")

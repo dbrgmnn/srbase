@@ -174,6 +174,10 @@ const appRender = {
                         ${Array.from({length: 18}, (_, i) => i + 6).map(v => `<option value="${v * 60}" ${userSettings.notification_time === v * 60 ? 'selected' : ''}>${v}:00</option>`).join('')}
                     </select>
                 </div>
+                <div class="setting-item">
+                    <span style="color:var(--text-high); font-weight:500;">Telegram Chat ID</span>
+                    <input type="text" class="input" style="width: 140px; height: 38px; padding: 0 12px; margin: 0; text-align: right; border:none; background:transparent; color:var(--text-high);" placeholder="Not set" value="${currentUser.telegram_chat_id || ''}" onchange="saveTelegramChatId(this.value)">
+                </div>
             </div>
         `;
     },

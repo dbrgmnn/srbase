@@ -58,26 +58,16 @@ class Scheduler:
         self.app = app
         self.token = config.TG_TOKEN
         self.tz = config.APP_TZ
-        self.user_map = self._parse_user_map(config.TG_MAPPING)
+        self.admin_chat_id = config.TG_ADMIN
         self.notifier = TelegramNotifier(self.token) if self.token else None
         
         self.last_sent = {}  # {f"{user_id}_{lang}": "YYYY-MM-DD-HH"}
         self.last_backup_day = None
 
-    @staticmethod
-    def _parse_user_map(mapping_str: str) -> dict:
-        if not mapping_str:
-            return {}
-        try:
-            return {int(p.split(':')[0]): p.split(':')[1] for p in mapping_str.split(',') if ':' in p}
-        except Exception as e:
-            logger.error("Invalid TG_MAPPING format: %s", e)
-            return {}
-
     async def run(self):
         """Main loop for the scheduler."""
-        if not self.notifier or not self.user_map:
-            logger.warning("Scheduler disabled: TG_TOKEN or TG_MAPPING missing")
+        if not self.notifier:
+            logger.warning("Scheduler disabled: TG_TOKEN missing")
             return
 
         logger.info("Scheduler started")
@@ -117,16 +107,17 @@ class Scheduler:
             return
 
         if now.hour == 12 and self.last_backup_day != now.date():
+            if not self.admin_chat_id:
+                logger.warning("No TG_ADMIN configured for database backups")
+                return
+
             backup_path = f"backup_{now.strftime('%Y%m%d')}.db"
             try:
-                # Use first or second user as admin (matching old logic)
-                admin_chat_id = list(self.user_map.values())[1] if len(self.user_map) >= 2 else list(self.user_map.values())[0]
-
                 # Create hot backup
                 await self.app['db'].execute(f"VACUUM INTO '{backup_path}'")
 
                 # Send document
-                success = await self.notifier.send_document(admin_chat_id, backup_path, backup_path)
+                success = await self.notifier.send_document(self.admin_chat_id, backup_path, backup_path)
                 if success:
                     logger.info("Daily backup sent to admin")
                     self.last_backup_day = now.date()
@@ -144,7 +135,12 @@ class Scheduler:
         current_minutes = now.hour * 60 + now.minute
         hour_key = now.strftime("%Y-%m-%d-%H")
 
-        for user_id, chat_id in self.user_map.items():
+        # Get users from database
+        db_users = await self.app['user_repo'].get_users_with_telegram()
+
+        for user in db_users:
+            user_id = user["id"]
+            chat_id = user["telegram_chat_id"]
             user_languages = await self.app['user_repo'].get_all_user_languages(user_id)
             
             for lang in user_languages:

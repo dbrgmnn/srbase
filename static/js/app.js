@@ -418,6 +418,15 @@ async function saveNotificationTime(val) {
     }
 }
 
+async function saveTelegramChatId(val) {
+    const res = await API.request('/api/me', 'PUT', { telegram_chat_id: val.trim() });
+    if (res.status === 'ok') {
+        currentUser.telegram_chat_id = val.trim() || null;
+    } else {
+        alert(res.message || "Failed to update Telegram Chat ID");
+    }
+}
+
 async function changeLanguage(lang) {
     currentLanguage = lang;
     const res = await API.request(`/api/me/settings?lang=${currentLanguage}`);
