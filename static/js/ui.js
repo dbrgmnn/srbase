@@ -103,7 +103,7 @@ const appRender = {
                 <option value="C2">C2</option>
             </select>
             <div style="margin-top:24px; display:flex; justify-content:center; gap:16px;">
-                <button onclick="cancelWordEdit()" class="btn btn-ghost-muted">Cancel</button>
+                <button onclick="toggleView('home')" class="btn btn-ghost-muted">Cancel</button>
                 <button id="addWordSubmitBtn" onclick="handleAddWordSubmit()" class="btn btn-primary" style="min-width:100px;">Add</button>
             </div>
         </div>

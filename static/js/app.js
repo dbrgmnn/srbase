@@ -124,34 +124,61 @@ function renderSearchResults(words, query = '') {
             const el = document.createElement('div');
             el.className = 'swipe-container';
             el.id = `word-${w.id}`;
+            
             el.innerHTML = `
                 <div class="swipe-action" onclick="handleDeleteWord(${w.id})">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                 </div>
                 <div class="swipe-content card"
-                     style="padding:16px 18px; text-align:left; display:flex; align-items:center; justify-content:space-between; gap:12px;"
+                     style="padding:16px 18px; text-align:left; display:flex; align-items:flex-start; justify-content:space-between; gap:12px;"
                      ontouchstart="handleSwipeStart(event)"
                      ontouchmove="handleSwipeMove(event)"
                      ontouchend="handleSwipeEnd(event)"
                      onmousedown="handleSwipeStart(event)">
+                    
                     <div style="flex:1; min-width:0;">
-                        <div class="word-text" style="color:#fff; font-weight:700; font-size:1.1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
-                        <div class="word-translation" style="color:var(--primary); font-size:1rem; margin-top:3px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+                        <!-- VIEW MODE -->
+                        <div id="view-mode-${w.id}"></div>
+                        
+                        <!-- EDIT MODE (Hidden by default) -->
+                        <div id="edit-mode-${w.id}" style="display:none; flex-direction:column; gap:8px;" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+                            <input type="text" id="edit-word-${w.id}" class="input" style="margin:0; padding:8px;" placeholder="Word">
+                            <input type="text" id="edit-translation-${w.id}" class="input" style="margin:0; padding:8px;" placeholder="Translation">
+                            <textarea id="edit-example-${w.id}" class="input" style="margin:0; padding:8px; resize:none; font-size:0.9rem;" rows="2" placeholder="Example"></textarea>
+                            <select id="edit-level-${w.id}" class="input" style="margin:0; padding:8px; color:var(--text-med);">
+                                <option value="">Level (Optional)</option>
+                                <option value="A1">A1</option>
+                                <option value="A2">A2</option>
+                                <option value="B1">B1</option>
+                                <option value="B2">B2</option>
+                                <option value="C1">C1</option>
+                                <option value="C2">C2</option>
+                            </select>
+                            <div style="display:flex; gap:8px; margin-top:4px;">
+                                <button class="btn btn-secondary" style="flex:1; padding:8px;" onclick="toggleInlineEdit(${w.id}, false)">Cancel</button>
+                                <button class="btn btn-primary" style="flex:1; padding:8px;" id="save-btn-${w.id}" onclick="saveInlineEdit(${w.id})">Save</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="word-edit-btn"
+                    <div class="word-edit-btn" id="edit-btn-${w.id}"
                          style="flex-shrink:0; cursor:pointer; color:var(--text-low); padding:6px; transition:color 0.2s;"
-                         onmouseenter="this.style.color='var(--primary)'" onmouseleave="this.style.color='var(--text-low)'">
+                         onmouseenter="this.style.color='var(--primary)'" onmouseleave="this.style.color='var(--text-low)'"
+                         onclick="toggleInlineEdit(${w.id}, true)">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </div>
                 </div>
             `;
-            // Set text content safely (prevents XSS)
-            el.querySelector('.word-text').textContent = w.word || '?';
-            el.querySelector('.word-translation').textContent = w.translation || '?';
-            el.querySelector('.word-edit-btn').addEventListener('click', () =>
-                openEditWord(w.id, w.word || '', w.translation || '', w.example || '', w.level || '')
-            );
+            
+            // Populate edit fields securely via DOM properties
+            el.querySelector(`#edit-word-${w.id}`).value = w.word || '';
+            el.querySelector(`#edit-translation-${w.id}`).value = w.translation || '';
+            el.querySelector(`#edit-example-${w.id}`).value = w.example || '';
+            el.querySelector(`#edit-level-${w.id}`).value = w.level || '';
+            
             container.appendChild(el);
+            
+            // Build the initial view mode
+            updateViewMode(w.id, w);
         });
     } else {
         const safeQuery = query ? query.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m])) : '';
@@ -258,71 +285,73 @@ async function handleFilterClick(filterType) {
     renderSearchResults(res.data || []); 
 }
 
-let editingWordId = null;
 let lastSearchQuery = '';
 let lastFilterType = null;
-let shouldRestoreSearch = false;
 
-async function restoreSearchState() {
-    const container = document.getElementById('searchResults');
-    if (container) container.innerHTML = '<div style="text-align:center; padding:100px; color:var(--text-low); font-size:1.1rem;">Restoring...</div>';
+function updateViewMode(id, w) {
+    const viewMode = document.getElementById(`view-mode-${id}`);
+    if (!viewMode) return;
+    
+    const levelHtml = w.level 
+        ? `<div class="word-level" style="font-size:0.7rem; background:rgba(255,255,255,0.15); padding:2px 6px; border-radius:4px; color:#ddd; font-weight:600; flex-shrink:0;"></div>` 
+        : '';
+    const exampleHtml = w.example 
+        ? `<div class="word-example" style="color:var(--text-low); font-size:0.85rem; font-style:italic; margin-top:6px; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;"></div>` 
+        : '';
 
-    if (lastFilterType) {
-        const res = await API.request(`/api/words/search?filter=${lastFilterType}&lang=${currentLanguage}`);
-        renderSearchResults(res.data || []);
-    } else if (lastSearchQuery) {
-        const res = await API.request(`/api/words/search?q=${encodeURIComponent(lastSearchQuery)}&lang=${currentLanguage}`);
-        renderSearchResults(res.data || [], lastSearchQuery);
-    }
+    viewMode.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px;">
+            <div class="word-text" style="color:#fff; font-weight:700; font-size:1.1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+            ${levelHtml}
+        </div>
+        <div class="word-translation" style="color:var(--primary); font-size:1rem; margin-top:3px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+        ${exampleHtml}
+    `;
+
+    viewMode.querySelector('.word-text').textContent = w.word || '?';
+    viewMode.querySelector('.word-translation').textContent = w.translation || '?';
+    if (w.level) viewMode.querySelector('.word-level').textContent = w.level;
+    if (w.example) viewMode.querySelector('.word-example').textContent = `"${w.example}"`;
 }
 
-
-function openEditWord(id, word, translation, example, level) {
-    editingWordId = id;
-    const panel = document.getElementById('addWordPanel');
-
-    // Reuse the addWord panel but pre-fill fields
-    panel.innerHTML = appRender.addWord();
-    panel.classList.add('active');
-    document.getElementById('homePanel').style.display = 'none';
-    document.getElementById('searchPanel').classList.remove('active');
-
-    document.getElementById('addWordText').value = word;
-    document.getElementById('addTranslationText').value = translation;
-    document.getElementById('addExampleText').value = example;
-    document.getElementById('addLevelText').value = level;
-
-    // Change "Add" button to "Save"
-    const addBtn = document.getElementById('addWordSubmitBtn');
-    if (addBtn) {
-        addBtn.textContent = 'Save';
-        addBtn.setAttribute('onclick', 'handleEditWordSubmit()');
-    }
-}
-
-function cancelWordEdit() {
-    if (editingWordId) {
-        editingWordId = null;
-        shouldRestoreSearch = true;
-        toggleView('search');
+function toggleInlineEdit(id, show) {
+    const viewMode = document.getElementById(`view-mode-${id}`);
+    const editMode = document.getElementById(`edit-mode-${id}`);
+    const editBtn = document.getElementById(`edit-btn-${id}`);
+    
+    if (!viewMode || !editMode || !editBtn) return;
+    
+    if (show) {
+        viewMode.style.display = 'none';
+        editMode.style.display = 'flex';
+        editBtn.style.display = 'none';
     } else {
-        toggleView('home');
+        viewMode.style.display = 'block';
+        editMode.style.display = 'none';
+        editBtn.style.display = 'block';
     }
 }
 
-async function handleEditWordSubmit() {
-    const word = document.getElementById('addWordText').value.trim();
-    const translation = document.getElementById('addTranslationText').value.trim();
-    const example = document.getElementById('addExampleText').value.trim() || '';
-    const level = document.getElementById('addLevelText').value.trim() || '';
+async function saveInlineEdit(id) {
+    const word = document.getElementById(`edit-word-${id}`).value.trim();
+    const translation = document.getElementById(`edit-translation-${id}`).value.trim();
+    const example = document.getElementById(`edit-example-${id}`).value.trim() || '';
+    const level = document.getElementById(`edit-level-${id}`).value.trim() || '';
 
     if (!word || !translation) return alert('Word and translation are required.');
 
-    const res = await API.request(`/api/words/${editingWordId}`, 'PATCH', { word, translation, example, level });
+    const saveBtn = document.getElementById(`save-btn-${id}`);
+    saveBtn.innerText = 'Saving...';
+    saveBtn.disabled = true;
+
+    const res = await API.request(`/api/words/${id}`, 'PATCH', { word, translation, example, level });
+    
+    saveBtn.innerText = 'Save';
+    saveBtn.disabled = false;
+
     if (res.status === 'ok') {
-        editingWordId = null;
-        shouldRestoreSearch = true;
-        toggleView('search');
+        updateViewMode(id, { word, translation, example, level });
+        toggleInlineEdit(id, false);
     } else {
         alert(res.message || "Failed to update");
     }
@@ -366,20 +395,9 @@ function toggleView(type) {
     // Show selected
     if (type === 'search') {
         if (searchPanel) searchPanel.classList.add('active');
-        
-        if (shouldRestoreSearch) {
-            const inputEl = document.getElementById('searchInput');
-            if (inputEl) inputEl.value = lastSearchQuery;
-            restoreSearchState();
-            shouldRestoreSearch = false; 
-        } else {
-            const inputEl = document.getElementById('searchInput');
-            if (inputEl) {
-                inputEl.value = '';
-                setTimeout(() => inputEl.focus(), 50); 
-            }
-            const resultsEl = document.getElementById('searchResults');
-            if (resultsEl) resultsEl.innerHTML = '';
+        const inputEl = document.getElementById('searchInput');
+        if (inputEl && !inputEl.value) {
+            setTimeout(() => inputEl.focus(), 50); 
         }
     } else if (type === 'settings') {
         if (settingsPanel) settingsPanel.classList.add('active');
