@@ -37,5 +37,11 @@ It implements the SM-2 spaced repetition algorithm, runs as a Progressive Web Ap
    ```
    The application will be available at `http://localhost:8080`.
 
+## Private Access
+
+SRbase is designed to run on a private server accessible only through a trusted network channel such as [Tailscale](https://tailscale.com), WireGuard, or a similar VPN solution.
+
+This means the application is never exposed to the public internet. Authentication is intentionally kept simple — identity is managed via a user ID stored in the browser's local storage — since the network layer already handles access control.
+
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
