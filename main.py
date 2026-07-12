@@ -3,6 +3,7 @@ from aiohttp import web
 from core import config
 from core.factory import create_app
 
+
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 

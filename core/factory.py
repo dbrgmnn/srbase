@@ -9,6 +9,7 @@ from api.routes import setup_routes
 from core.scheduler import Scheduler
 from core import config
 
+
 logger = logging.getLogger(__name__)
 
 async def on_startup(app: web.Application):

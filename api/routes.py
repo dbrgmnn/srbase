@@ -3,6 +3,7 @@ from api.auth import UserHandler
 from api.words import WordHandler
 from api.practice import PracticeHandler
 
+
 async def index_handler(_request):
     """Serve the main index.html file."""
     return web.FileResponse('./index.html')

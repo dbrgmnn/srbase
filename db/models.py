@@ -1,8 +1,8 @@
 import aiosqlite
 import logging
 
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 async def init_db(db_path: str) -> aiosqlite.Connection:
     """Create all tables if they do not exist, return the open connection."""

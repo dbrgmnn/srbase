@@ -5,8 +5,8 @@ from datetime import datetime, timedelta, timezone
 import aiohttp
 from core import config
 
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 class TelegramNotifier:
     """Service to handle Telegram notifications."""

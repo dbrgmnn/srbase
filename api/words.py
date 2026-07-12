@@ -2,6 +2,7 @@ import logging
 import os
 from aiohttp import web
 
+
 logger = logging.getLogger(__name__)
 
 env_langs = os.getenv("ALLOWED_LANGS", "en,de")
@@ -106,9 +107,9 @@ class WordHandler:
                 elif filter_type == "due":
                     words = await repo.get_session_words(user_id, language, 0)
                 elif filter_type == "today_new":
-                    words = await repo.get_today_words(user_id, language, "last_reviewed_at")
+                    words = await repo.get_today_words(user_id, language, "last_reviewed_at", tz=request.get("tz"))
                 elif filter_type == "today_added":
-                    words = await repo.get_today_words(user_id, language, "created_at")
+                    words = await repo.get_today_words(user_id, language, "created_at", tz=request.get("tz"))
                 else:
                     words = []
                 
@@ -134,9 +135,8 @@ class WordHandler:
             settings = await user_repo.get_settings(user_id, language)
             daily_limit = settings.get("daily_limit", 20)
             repo = request.app["word_repo"]
-            stats = await repo.get_full_stats(user_id, language, daily_limit=daily_limit)
+            stats = await repo.get_full_stats(user_id, language, daily_limit=daily_limit, tz=request.get("tz"))
             return web.json_response({"status": "ok", "message": "Stats retrieved", "data": stats})
         except Exception as e:
             logger.error("Stats error: %s", e)
             return web.json_response({"status": "error", "message": "Internal server error"}, status=500)
-

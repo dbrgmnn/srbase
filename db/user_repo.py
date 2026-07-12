@@ -1,8 +1,8 @@
 import logging
 import aiosqlite
 
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 class UserRepo:
     """Repository for managing user-related data and settings."""

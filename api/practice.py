@@ -3,6 +3,7 @@ from aiohttp import web
 from core.srs import sm2
 from api.words import ALLOWED_LANGS
 
+
 logger = logging.getLogger(__name__)
 
 class PracticeHandler:
@@ -23,7 +24,7 @@ class PracticeHandler:
             
             # We check how many new words were already started today
             word_repo = request.app["word_repo"]
-            stats = await word_repo.get_full_stats(user_id, language, daily_limit=limit)
+            stats = await word_repo.get_full_stats(user_id, language, daily_limit=limit, tz=request.get("tz"))
             
             # new_limit is the number of "fresh" words we can add to the session
             new_limit = max(0, limit - stats.get("today_new", 0))
@@ -56,7 +57,7 @@ class PracticeHandler:
             if not word:
                 return web.json_response({"status": "error", "message": "Word not found"}, status=404)
 
-            # --- Use centralized SM-2 Implementation ---
+            # Use centralized SM-2 Implementation
             result = sm2(
                 quality=quality,
                 repetitions=word.get('repetitions', 0),

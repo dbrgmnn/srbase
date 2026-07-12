@@ -1,5 +1,7 @@
 import logging
 from aiohttp import web
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +54,12 @@ async def auth_middleware(request, handler):
         request["user_id"] = user_id
     except ValueError:
         return web.json_response({"status": "error", "message": "Invalid user ID format"}, status=400)
+
+    tz_str = request.headers.get("X-Timezone", "UTC")
+    try:
+        request["tz"] = ZoneInfo(tz_str)
+    except ZoneInfoNotFoundError:
+        request["tz"] = ZoneInfo("UTC")
 
     return await handler(request)
 
@@ -165,6 +173,3 @@ class UserHandler:
             notification_threshold=notif_threshold,
         )
         return web.json_response({"status": "ok", "message": "Settings updated"})
-
-
-

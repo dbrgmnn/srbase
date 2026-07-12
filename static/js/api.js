@@ -3,7 +3,10 @@ const API = {
         const userId = localStorage.getItem('user_id');
         const options = {
             method,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
+            }
         };
         if (userId) options.headers['X-User-Id'] = userId;
         if (body) options.body = JSON.stringify(body);

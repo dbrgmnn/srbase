@@ -1,12 +1,11 @@
 import logging
 from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
-
 import aiosqlite
 from core.srs import SRSStatus
 
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 class WordRepo:
     """Repository for managing word-related data and statistics."""
@@ -73,7 +72,7 @@ class WordRepo:
         return [dict(row) for row in rows]
 
     async def get_today_words(
-        self, user_id: int, language: str, field: str = "created_at"
+        self, user_id: int, language: str, field: str = "created_at", tz: ZoneInfo | None = None
     ) -> list[dict]:
         """Get words filtered by the date field (created_at, started_at, or last_reviewed_at) for today (UTC)."""
         if field == "created_at":
@@ -91,7 +90,8 @@ class WordRepo:
         else:
             raise ValueError("Invalid date field: %s" % field)
 
-        start_local = datetime.now(tz=self.tz).replace(hour=0, minute=0, second=0, microsecond=0)
+        current_tz = tz or self.tz
+        start_local = datetime.now(tz=current_tz).replace(hour=0, minute=0, second=0, microsecond=0)
         start_utc = start_local.astimezone(UTC)
         cursor = await self.db.execute(query, (user_id, language, start_utc.isoformat()))
         rows = await cursor.fetchall()
@@ -229,12 +229,13 @@ class WordRepo:
 
     # --- STATS OPERATIONS ---
 
-    async def get_full_stats(self, user_id: int, language: str, daily_limit: int = 20) -> dict:
+    async def get_full_stats(self, user_id: int, language: str, daily_limit: int = 20, tz: ZoneInfo | None = None) -> dict:
         """Get comprehensive statistics about the user's learning progress."""
         now_utc = datetime.now(tz=UTC)
         
         # Calculate start of today and start of next day in user's local timezone
-        today_local = datetime.now(tz=self.tz).replace(hour=0, minute=0, second=0, microsecond=0)
+        current_tz = tz or self.tz
+        today_local = datetime.now(tz=current_tz).replace(hour=0, minute=0, second=0, microsecond=0)
         today_start = today_local.astimezone(UTC)
         next_day_start = (today_local + timedelta(days=1)).astimezone(UTC)
 
