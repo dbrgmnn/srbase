@@ -352,6 +352,12 @@ select.input {
     background: transparent; color: #ff3b30; z-index: 1;
 }
 
+.swipe-content {
+    position: relative;
+    z-index: 2;
+    background-color: #1e1e1e;
+}
+
 /* --- TOGGLE SWITCH --- */
 .switch {
     position: relative;
