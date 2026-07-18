@@ -440,6 +440,27 @@ async function saveNotificationTime(val) {
     }
 }
 
+async function toggleNotifications(enabled) {
+    const val = enabled ? 720 : -1; // 720 = 12:00
+    const res = await API.request('/api/me/settings', 'PUT', { lang: currentLanguage, notification_time: val });
+    if (res.status === 'ok') {
+        userSettings.notification_time = val;
+        const timeRow = document.getElementById('notifTimeRow');
+        const thresholdRow = document.getElementById('notifThresholdRow');
+        if (enabled) {
+            timeRow?.classList.remove('hidden');
+            thresholdRow?.classList.remove('hidden');
+            const selectEl = timeRow?.querySelector('select');
+            if (selectEl) {
+                selectEl.value = "720";
+            }
+        } else {
+            timeRow?.classList.add('hidden');
+            thresholdRow?.classList.add('hidden');
+        }
+    }
+}
+
 async function saveNotificationThreshold(val) {
     const res = await API.request('/api/me/settings', 'PUT', { lang: currentLanguage, notification_threshold: parseInt(val) });
     if (res.status === 'ok') {

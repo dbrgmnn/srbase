@@ -81,7 +81,7 @@ const appRender = {
 
             <button class="btn btn-primary btn-lg btn-block" style="margin-top:25px;" onclick="startPractice()" disabled>Practice</button>
             <div style="margin-top:12px; display:flex; justify-content:center;">
-                <button onclick="toggleView('addWord')" class="btn btn-ghost">+ Add Word</button>
+                <button onclick="toggleView('addWord')" class="btn btn-ghost">Add Word</button>
             </div>
         </div>
     `,
@@ -140,9 +140,9 @@ const appRender = {
                     <button class="btn btn-secondary btn-block" onclick="renderSettingsPanel(false)">Cancel</button>
                     <button class="btn btn-primary btn-block" onclick="saveProfile()">Save</button>
                </div>`
-            : `<div style="margin-top:20px; display:flex; gap:12px; width:100%;">
-                    <button class="btn btn-secondary btn-block" onclick="logout()">Logout</button>
-                    <button class="btn btn-danger btn-block" onclick="deleteProfile()">Delete</button>
+            : `<div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <button onclick="deleteProfile()" style="color:#ff453a; font-weight:600; font-size:0.95rem; cursor:pointer; border:none; background:transparent; padding:0; outline:none; font-family:inherit;">Delete Profile</button>
+                    <button class="btn btn-secondary" onclick="logout()">Logout</button>
                </div>`;
 
         return `
@@ -157,29 +157,35 @@ const appRender = {
             <div class="panel-section" style="margin-top:20px;">
                 <div class="panel-label" style="text-align:center;">Learning</div>
                 <div class="setting-item">
-                    <span style="color:var(--text-high); font-weight:500;">Dictionary</span>
+                    <span style="color:var(--text-high); font-weight:500;">Target Language</span>
                     <select class="input" style="width: auto; height: 38px; padding: 0 12px; margin: 0; text-align: right; border:none; background:transparent;" onchange="changeLanguage(this.value)">
                         <option value="de" ${currentLanguage === 'de' ? 'selected' : ''}>German</option>
                         <option value="en" ${currentLanguage === 'en' ? 'selected' : ''}>English</option>
                     </select>
                 </div>
                 <div class="setting-item">
-                    <span style="color:var(--text-high); font-weight:500;">Daily New</span>
+                    <span style="color:var(--text-high); font-weight:500;">New Words</span>
                     <select class="input" style="width: auto; height: 38px; padding: 0 12px; margin: 0; text-align: right; border:none; background:transparent;" onchange="saveLimit(this.value)">
                         ${[1, 5, 10, 15, 20, 30, 40].map(v => `<option value="${v}" ${userSettings.daily_limit === v ? 'selected' : ''}>${v} word${v > 1 ? 's' : ''}</option>`).join('')}
                     </select>
                 </div>
                 <div class="setting-item">
-                    <span style="color:var(--text-high); font-weight:500;">Notify at</span>
+                    <span style="color:var(--text-high); font-weight:500;">Telegram Notifications</span>
+                    <label class="switch">
+                        <input type="checkbox" id="notifToggle" ${userSettings.notification_time !== -1 ? 'checked' : ''} onchange="toggleNotifications(this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item setting-item-sub ${userSettings.notification_time === -1 ? 'hidden' : ''}" id="notifThresholdRow" style="margin-top: 10px;">
+                    <span style="color:var(--text-high); font-weight:500;">Notify from</span>
                     <select class="input" style="width: auto; height: 38px; padding: 0 12px; margin: 0; text-align: right; border:none; background:transparent;" onchange="saveNotificationThreshold(this.value)">
                         ${[1, 5, 10, 15, 20, 30, 40].map(v => `<option value="${v}" ${(userSettings.notification_threshold ?? 1) === v ? 'selected' : ''}>${v} word${v > 1 ? 's' : ''}</option>`).join('')}
                     </select>
                 </div>
-                <div class="setting-item">
-                    <span style="color:var(--text-high); font-weight:500;">Notify Time</span>
+                <div class="setting-item setting-item-sub ${userSettings.notification_time === -1 ? 'hidden' : ''}" id="notifTimeRow" style="margin-top: 10px;">
+                    <span style="color:var(--text-high); font-weight:500;">Preferred Time</span>
                     <select class="input" style="width: auto; height: 38px; padding: 0 12px; margin: 0; text-align: right; border:none; background:transparent;" onchange="saveNotificationTime(this.value)">
-                        <option value="-1" ${userSettings.notification_time === -1 ? 'selected' : ''}>Off</option>
-                        ${Array.from({length: 18}, (_, i) => i + 6).map(v => `<option value="${v * 60}" ${userSettings.notification_time === v * 60 ? 'selected' : ''}>${v}:00</option>`).join('')}
+                        ${Array.from({length: 18}, (_, i) => i + 6).map(v => `<option value="${v * 60}" ${(userSettings.notification_time !== -1 ? userSettings.notification_time : 720) === v * 60 ? 'selected' : ''}>${v}:00</option>`).join('')}
                     </select>
                 </div>
             </div>
