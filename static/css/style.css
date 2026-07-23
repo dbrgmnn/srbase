@@ -96,8 +96,8 @@ select.input {
 .practice-btn { flex-direction: column; gap: 5px; }
 .practice-btn-title { font-size: 1.25rem; font-weight: 700; line-height: 1; }
 .practice-btn-sub { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600; opacity: 0.85; }
-.practice-sub-review { color: #ff9f0a; }
-.practice-sub-new { color: #30d158; }
+.practice-sub-review { color: #ff9f0a; font-size: 1rem; }
+.practice-sub-new { color: #30d158; font-size: 1rem; }
 .practice-sub-dot { color: rgba(255,255,255,0.3); }
 .btn-block { width: 100%; display: flex; }
 
@@ -163,8 +163,8 @@ select.input {
 .stat-card.large:active { transform: none; }
 .stat-card.small { padding: 14px 4px; border-radius: var(--radius); }
 
-.stat-num { font-size: 1.25rem; font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: -0.5px; }
-.stat-label { font-size: 0.75rem; color: var(--text-low); letter-spacing: -0.2px; font-weight: 600; margin-top: 6px; text-transform: uppercase; }
+.stat-num { font-size: 1rem; font-weight: 600; color: #fff; line-height: 1.1; letter-spacing: -0.5px; }
+.stat-label { font-size: 0.7rem; color: var(--text-low); letter-spacing: -0.2px; font-weight: 600; margin-top: 6px; text-transform: uppercase; }
 
 .panel { 
     width: 100%; 
