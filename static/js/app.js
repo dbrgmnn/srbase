@@ -68,7 +68,6 @@ async function updateStats() {
         lastStats = res.data;
         const stats = res.data;
         const fields = {
-            'statDue': stats.due || 0,
             'statQueue': stats.total || 0,
             'statLearning': stats.difficult || 0,
             'statKnown': stats.learning || 0,
@@ -80,19 +79,20 @@ async function updateStats() {
             const el = document.getElementById(id);
             if (el) el.innerText = val;
         }
-        
-        const nextTimeEl = document.getElementById('statNextTime');
-        if (nextTimeEl) {
-            const limit = userSettings.daily_limit || 20;
-            const remainingInLimit = Math.max(0, limit - (stats.today_new || 0));
-            const availableNew = Math.min(stats.st_new || 0, remainingInLimit);
-            nextTimeEl.innerText = availableNew > 0 ? availableNew : "0";
-        }
 
-        const pBtn = document.querySelector('.btn-primary.btn-lg');
+        const limit = userSettings.daily_limit || 20;
+        const remainingInLimit = Math.max(0, limit - (stats.today_new || 0));
+        const availableNew = Math.min(stats.st_new || 0, remainingInLimit);
+
+        const btnDue = document.getElementById('btnDue');
+        if (btnDue) btnDue.textContent = `${stats.due || 0} review`;
+
+        const btnNew = document.getElementById('btnNew');
+        if (btnNew) btnNew.textContent = `${availableNew} new`;
+
+        const pBtn = document.querySelector('.practice-btn');
         if (pBtn) {
             pBtn.disabled = !(stats.session_total > 0);
-            pBtn.innerText = 'Practice';
         }
     }
 }

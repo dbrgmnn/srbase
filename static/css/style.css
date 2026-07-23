@@ -92,6 +92,13 @@ select.input {
 .btn-ghost-muted { background: transparent; color: var(--text-low); padding: 8px 12px; }
 
 .btn-lg { padding: 20px; font-size: 1.25rem; font-weight: 700; border-radius: var(--radius); }
+
+.practice-btn { flex-direction: column; gap: 5px; }
+.practice-btn-title { font-size: 1.25rem; font-weight: 700; line-height: 1; }
+.practice-btn-sub { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600; opacity: 0.85; }
+.practice-sub-review { color: #ff9f0a; }
+.practice-sub-new { color: #30d158; }
+.practice-sub-dot { color: rgba(255,255,255,0.3); }
 .btn-block { width: 100%; display: flex; }
 
 .bottom-nav {

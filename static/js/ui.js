@@ -37,16 +37,6 @@ const appRender = {
                 <div class="panel-label" style="text-align:center;">Home</div>
             </div>
             <div class="dashboard-grid">
-                <div class="dashboard-row row-main">
-                    <div class="stat-card large">
-                        <div class="stat-num" id="statDue">0</div>
-                        <div class="stat-label">Review</div>
-                    </div>
-                    <div class="stat-card large">
-                        <div class="stat-num" id="statNextTime">0</div>
-                        <div class="stat-label">New</div>
-                    </div>
-                </div>
 
                 <div class="dashboard-row row-stats">
                     <div class="stat-card small" onclick="handleFilterClick('total')">
@@ -79,7 +69,14 @@ const appRender = {
                 </div>
             </div>
 
-            <button class="btn btn-primary btn-lg btn-block" style="margin-top:25px;" onclick="startPractice()" disabled>Practice</button>
+            <button class="btn btn-primary btn-lg btn-block practice-btn" style="margin-top:25px;" onclick="startPractice()" disabled>
+                <span class="practice-btn-title">Practice</span>
+                <span class="practice-btn-sub">
+                    <span id="btnDue" class="practice-sub-review">0 review</span>
+                    <span class="practice-sub-dot">·</span>
+                    <span id="btnNew" class="practice-sub-new">0 new</span>
+                </span>
+            </button>
             <div style="margin-top:12px; display:flex; justify-content:center;">
                 <button onclick="toggleView('addWord')" class="btn btn-ghost">Add Word</button>
             </div>
