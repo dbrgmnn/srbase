@@ -30,12 +30,20 @@ const appRender = {
         ${appRender.navbar('home')}
         <div id="searchPanel" class="panel">${appRender.search()}</div>
         <div id="settingsPanel" class="panel">${appRender.settings()}</div>
-        <div id="addWordPanel" class="panel">${appRender.addWord()}</div>
+        <div id="addWordPanel">${appRender.addWord()}</div>
         
         <div class="view-container" id="homePanel">
             <div class="panel-section" style="margin-top:0;">
                 <div class="panel-label" style="text-align:center;">Home</div>
             </div>
+            
+            <div class="card" style="padding:12px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px;">
+                <input type="text" id="homeAddWordText" class="input" placeholder="Add word..." style="margin-bottom:0;" onkeydown="if(event.key==='Enter') openAddWordModal()">
+                <button onclick="openAddWordModal()" class="btn" style="width:44px; height:44px; border-radius:50%; background:#30d158; color:#fff; padding:0; flex-shrink:0; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+            </div>
+
             <div class="dashboard-grid">
 
                 <div class="dashboard-row row-stats">
@@ -77,31 +85,33 @@ const appRender = {
                     <span id="btnNew" class="practice-sub-new">0 new</span>
                 </span>
             </button>
-            <div style="margin-top:12px; display:flex; justify-content:center;">
-                <button onclick="toggleView('addWord')" class="btn btn-ghost">Add Word</button>
-            </div>
         </div>
     `,
     addWord: () => `
-        <div class="panel-section" style="margin-top:0;">
-            <div class="panel-label" style="text-align:center;">Add Word</div>
-        </div>
-        <div class="card" style="padding:20px; margin-top:20px;">
-            <input type="text" id="addWordText" class="input" placeholder="Word*" required>
-            <input type="text" id="addTranslationText" class="input" placeholder="Translation*" required>
-            <textarea id="addExampleText" class="input" placeholder="Example" rows="3"></textarea>
-            <select id="addLevelText" class="input" style="color:var(--text-med);">
-                <option value="">Level</option>
-                <option value="A1">A1</option>
-                <option value="A2">A2</option>
-                <option value="B1">B1</option>
-                <option value="B2">B2</option>
-                <option value="C1">C1</option>
-                <option value="C2">C2</option>
-            </select>
-            <div style="margin-top:24px; display:flex; justify-content:center; gap:16px;">
-                <button onclick="toggleView('home')" class="btn btn-ghost-muted">Cancel</button>
-                <button id="addWordSubmitBtn" onclick="handleAddWordSubmit()" class="btn btn-primary" style="min-width:100px;">Add</button>
+        <div class="modal-overlay" id="addWordOverlay" onclick="closeAddWordModal(event)">
+            <div class="bottom-sheet" onclick="event.stopPropagation()">
+                <div class="sheet-handle"></div>
+                <div class="panel-section" style="margin-top:0;">
+                    <div class="panel-label" style="text-align:center;">Add Word</div>
+                </div>
+                <div class="card" style="padding:20px; margin-top:15px; border:none; background:transparent;">
+                    <input type="text" id="addWordText" class="input" placeholder="Word*" required>
+                    <input type="text" id="addTranslationText" class="input" placeholder="Translation*" required>
+                    <textarea id="addExampleText" class="input" placeholder="Example" rows="3"></textarea>
+                    <select id="addLevelText" class="input" style="color:var(--text-med);">
+                        <option value="">Level</option>
+                        <option value="A1">A1</option>
+                        <option value="A2">A2</option>
+                        <option value="B1">B1</option>
+                        <option value="B2">B2</option>
+                        <option value="C1">C1</option>
+                        <option value="C2">C2</option>
+                    </select>
+                    <div style="margin-top:20px; display:flex; justify-content:space-between; gap:16px;">
+                        <button onclick="closeAddWordModal()" class="btn btn-ghost-muted" style="flex:1;">Cancel</button>
+                        <button id="addWordSubmitBtn" onclick="handleAddWordSubmit()" class="btn btn-primary" style="flex:1;">Add</button>
+                    </div>
+                </div>
             </div>
         </div>
     `,

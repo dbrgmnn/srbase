@@ -357,22 +357,57 @@ async function saveInlineEdit(id) {
     }
 }
 
+function openAddWordModal() {
+    const homeInput = document.getElementById('homeAddWordText');
+    const wordVal = homeInput ? homeInput.value.trim() : '';
+
+    const overlay = document.getElementById('addWordOverlay');
+    if (overlay) {
+        overlay.classList.add('active');
+        const wordInput = document.getElementById('addWordText');
+        const transInput = document.getElementById('addTranslationText');
+        if (wordInput) wordInput.value = wordVal;
+        if (transInput) {
+            transInput.value = '';
+            setTimeout(() => transInput.focus(), 150);
+        }
+    }
+}
+
+function closeAddWordModal(e) {
+    if (e && e.target && !e.target.classList.contains('modal-overlay') && e.type === 'click') {
+        return;
+    }
+    const overlay = document.getElementById('addWordOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+}
+
 async function handleAddWordSubmit() {
-    const word = document.getElementById('addWordText').value.trim();
-    const translation = document.getElementById('addTranslationText').value.trim();
-    const example = document.getElementById('addExampleText').value.trim() || undefined;
-    const level = document.getElementById('addLevelText').value.trim() || undefined;
+    const wordInput = document.getElementById('addWordText');
+    const translationInput = document.getElementById('addTranslationText');
+    const exampleInput = document.getElementById('addExampleText');
+    const levelInput = document.getElementById('addLevelText');
+
+    const word = wordInput ? wordInput.value.trim() : '';
+    const translation = translationInput ? translationInput.value.trim() : '';
+    const example = exampleInput ? exampleInput.value.trim() : undefined;
+    const level = levelInput ? levelInput.value.trim() : undefined;
 
     if (!word || !translation) return alert('Word and translation are required.');
 
     const res = await API.request('/api/words', 'POST', { word, translation, example, level, lang: currentLanguage });
     if (res.status === 'ok') {
-        document.getElementById('addWordText').value = '';
-        document.getElementById('addTranslationText').value = '';
-        document.getElementById('addExampleText').value = '';
-        document.getElementById('addLevelText').value = '';
+        const homeInput = document.getElementById('homeAddWordText');
+        if (homeInput) homeInput.value = '';
+        if (wordInput) wordInput.value = '';
+        if (translationInput) translationInput.value = '';
+        if (exampleInput) exampleInput.value = '';
+        if (levelInput) levelInput.value = '';
+        
+        closeAddWordModal();
         updateStats();
-        toggleView('home');
     } else {
         alert(res.message || "Failed to add word");
     }

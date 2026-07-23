@@ -176,6 +176,49 @@ select.input {
 }
 .panel.active { display: flex; }
 
+/* --- BOTTOM SHEET MODAL --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+.bottom-sheet {
+    width: 100%;
+    max-width: var(--app-width);
+    background: var(--bg-card);
+    border-top-left-radius: var(--radius);
+    border-top-right-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: none;
+    padding: 16px 20px calc(env(safe-area-inset-bottom, 20px) + 20px);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+}
+.modal-overlay.active .bottom-sheet {
+    transform: translateY(0);
+}
+.sheet-handle {
+    width: 36px;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 auto 16px;
+}
+
 /* --- CUSTOM SCROLLBAR --- */
 ::-webkit-scrollbar {
     width: 4px;
