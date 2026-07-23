@@ -11,7 +11,6 @@ async def index_handler(_request):
 def setup_routes(app: web.Application):
     # Main entry point
     app.router.add_get('/', index_handler)
-    app.router.add_get('/sw.js', lambda _req: web.FileResponse('./sw.js'))
 
     # User routes
     app.router.add_get('/api/users/list', UserHandler.list_users)
