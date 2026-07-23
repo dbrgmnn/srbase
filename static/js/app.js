@@ -180,7 +180,6 @@ function openAddWordModal() {
         if (wordInput) wordInput.value = wordVal;
         if (transInput) {
             transInput.value = '';
-            setTimeout(() => transInput.focus(), 150);
         }
     }
 }
