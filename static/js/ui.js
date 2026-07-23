@@ -100,7 +100,6 @@ const appRender = {
     addWord: () => `
         <div class="modal-overlay" id="addWordOverlay" onclick="closeAddWordModal(event)">
             <div class="bottom-sheet" onclick="event.stopPropagation()">
-                <div class="sheet-handle"></div>
                 <div class="panel-section" style="margin-top:0;">
                     <div class="panel-label" style="text-align:center;">Add Word</div>
                 </div>
