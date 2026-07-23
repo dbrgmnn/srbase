@@ -308,10 +308,24 @@ function showTemporaryFeedback(iconText, labelText, className) {
 // --- AUDIO & SHORTCUTS ---
 function speakCurrentWord() {
     const word = sessionWords[currentWordIndex];
-    if (!word) return;
+    if (!word || !('speechSynthesis' in window)) return;
+
     window.speechSynthesis.cancel();
+    if (window.speechSynthesis.resume) {
+        window.speechSynthesis.resume();
+    }
+
     const utterance = new SpeechSynthesisUtterance(word.word);
-    utterance.lang = currentLanguage === 'de' ? 'de-DE' : 'en-US';
+    const targetLang = currentLanguage === 'de' ? 'de-DE' : 'en-US';
+    utterance.lang = targetLang;
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices && voices.length > 0) {
+        const voice = voices.find(v => v.lang === targetLang || v.lang.startsWith(currentLanguage));
+        if (voice) utterance.voice = voice;
+    }
+
+    utterance.rate = 0.9;
     window.speechSynthesis.speak(utterance);
 }
 
