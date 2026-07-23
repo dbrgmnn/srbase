@@ -1,18 +1,11 @@
 /**
- * UI Templates (Pure HTML renderers)
+ * ==========================================
+ * UI TEMPLATES (Pure HTML Renderers)
+ * ==========================================
  */
+
 const appRender = {
-    login: () => `
-        <div class="view-container" style="justify-content:center; min-height:80vh; gap:16px;">
-            <div id="profilesGrid" style="display:flex; flex-direction:column; gap:10px; width:100%;"></div>
-            
-            <div style="margin-top:8px; border-top:1px solid #222; padding-top:20px; display:flex; flex-direction:column; gap:12px;">
-                <input type="text" id="newName" class="input" style="margin-bottom:0;" placeholder="Name">
-                <input type="email" id="newEmail" class="input" style="margin-bottom:0;" placeholder="Email">
-                <button onclick="handleCreateProfile()" class="btn btn-ghost btn-block" style="margin-top:8px;">Create Profile</button>
-            </div>
-        </div>
-    `,
+    // --- NAVIGATION ---
     navbar: (active = 'home') => `
         <div class="bottom-nav" id="bottomNav" data-active="${active}">
             <div class="nav-segment ${active === 'search' ? 'active' : ''}" onclick="toggleView('search')">
@@ -26,6 +19,21 @@ const appRender = {
             </div>
         </div>
     `,
+
+    // --- AUTH / PROFILE SELECTION ---
+    login: () => `
+        <div class="view-container" style="justify-content:center; min-height:80vh; gap:16px;">
+            <div id="profilesGrid" style="display:flex; flex-direction:column; gap:10px; width:100%;"></div>
+            
+            <div style="margin-top:8px; border-top:1px solid #222; padding-top:20px; display:flex; flex-direction:column; gap:12px;">
+                <input type="text" id="newName" class="input" style="margin-bottom:0;" placeholder="Name">
+                <input type="email" id="newEmail" class="input" style="margin-bottom:0;" placeholder="Email">
+                <button onclick="handleCreateProfile()" class="btn btn-ghost btn-block" style="margin-top:8px;">Create Profile</button>
+            </div>
+        </div>
+    `,
+
+    // --- HOME HUB SCREEN ---
     hub: () => `
         ${appRender.navbar('home')}
         <div id="searchPanel" class="panel">${appRender.search()}</div>
@@ -87,6 +95,8 @@ const appRender = {
             </button>
         </div>
     `,
+
+    // --- ADD WORD MODAL (BOTTOM SHEET) ---
     addWord: () => `
         <div class="modal-overlay" id="addWordOverlay" onclick="closeAddWordModal(event)">
             <div class="bottom-sheet" onclick="event.stopPropagation()">
@@ -115,6 +125,8 @@ const appRender = {
             </div>
         </div>
     `,
+
+    // --- SEARCH / DICTIONARY ---
     search: () => `
         <div class="panel-section" style="margin-top:0;">
             <div class="panel-label" style="text-align:center;">Dictionary</div>
@@ -124,6 +136,8 @@ const appRender = {
         </div>
         <div id="searchResults"></div>
     `,
+
+    // --- SETTINGS PANEL ---
     settings: (isEdit = false) => {
         const pencilIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
         
@@ -198,6 +212,8 @@ const appRender = {
             </div>
         `;
     },
+
+    // --- PRACTICE SESSION ---
     practice: () => `
         <div class="practice-view" id="practiceView">
             <div class="practice-progress"><div class="practice-progress-inner" id="practiceProgressBar"></div></div>

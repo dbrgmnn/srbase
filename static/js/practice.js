@@ -1,6 +1,10 @@
 /**
- * Practice Session Management (Flat Design)
+ * ==========================================
+ * PRACTICE SESSION MANAGEMENT
+ * ==========================================
  */
+
+// --- GLOBAL SESSION STATE ---
 let sessionWords = [];
 let answerHistory = [];
 let currentWordIndex = 0;
@@ -8,6 +12,7 @@ let isAnimating = false;
 let swipeData = { startX: 0, startY: 0, currentX: 0, currentY: 0, active: false, dragStarted: false };
 let sessionStats = { review: 0, new: 0 };
 
+// --- SESSION LIFECYCLE ---
 async function startPractice() {
     const res = await API.request(`/api/practice/session?lang=${currentLanguage}`);
     if (res.status !== 'ok' || !res.data || res.data.length === 0) return alert(res.message || "Nothing to practice right now!");
@@ -26,6 +31,30 @@ async function startPractice() {
     renderSessionCard();
 }
 
+function closePractice() {
+    cleanupPractice();
+    renderHub();
+    updateStats();
+}
+
+function cleanupPractice() {
+    if (swipeData._handlers) {
+        const h = swipeData._handlers;
+        const card = document.getElementById('flashCard');
+        if (card) {
+            card.removeEventListener('mousedown', h.handleStart);
+            card.removeEventListener('touchstart', h.handleStart);
+        }
+        window.removeEventListener('mousemove', h.handleMove);
+        window.removeEventListener('mouseup', h.handleEnd);
+        window.removeEventListener('touchmove', h.handleMove);
+        window.removeEventListener('touchend', h.handleEnd);
+    }
+    window.speechSynthesis.cancel();
+    isAnimating = false;
+}
+
+// --- CARD RENDERING & FLIP ---
 function renderSessionCard() {
     updateUndoButtonState();
 
@@ -71,28 +100,20 @@ function renderSessionCard() {
     `;
 }
 
-function cleanupPractice() {
-    if (swipeData._handlers) {
-        const h = swipeData._handlers;
-        const card = document.getElementById('flashCard');
-        if (card) {
-            card.removeEventListener('mousedown', h.handleStart);
-            card.removeEventListener('touchstart', h.handleStart);
-        }
-        window.removeEventListener('mousemove', h.handleMove);
-        window.removeEventListener('mouseup', h.handleEnd);
-        window.removeEventListener('touchmove', h.handleMove);
-        window.removeEventListener('touchend', h.handleEnd);
-    }
-    window.speechSynthesis.cancel();
-    isAnimating = false;
-}
-
 function flipCard() {
     if (isAnimating) return;
     document.getElementById('flashCard').classList.toggle('is-revealed');
 }
 
+function updateUndoButtonState() {
+    const undoBtn = document.querySelector('.bottom-nav .nav-segment:nth-child(2)');
+    if (undoBtn) {
+        if (answerHistory.length === 0) undoBtn.classList.add('disabled');
+        else undoBtn.classList.remove('disabled');
+    }
+}
+
+// --- USER ACTIONS & SWIPE LOGIC ---
 function initSwipe() {
     const card = document.getElementById('flashCard');
     if (!card) return;
@@ -267,34 +288,24 @@ function showTemporaryFeedback(iconText, labelText, className) {
 
     if (!glow || !feedback) return;
 
-    // Set content
     icon.innerText = iconText;
     label.innerText = labelText;
     feedback.className = 'swipe-feedback-content ' + className;
 
-    // Show
     glow.style.transition = 'opacity 0.15s, transform 0.15s';
     glow.style.opacity = '1';
     glow.style.transform = 'scale(1)';
 
-    // Hide after delay
     setTimeout(() => {
         glow.style.opacity = '0';
         glow.style.transform = 'scale(0.8)';
         setTimeout(() => {
-            glow.style.transition = ''; // Reset transition for swipe logic
+            glow.style.transition = '';
         }, 150);
     }, 300);
 }
 
-function updateUndoButtonState() {
-    const undoBtn = document.querySelector('.bottom-nav .nav-segment:nth-child(2)');
-    if (undoBtn) {
-        if (answerHistory.length === 0) undoBtn.classList.add('disabled');
-        else undoBtn.classList.remove('disabled');
-    }
-}
-
+// --- AUDIO & SHORTCUTS ---
 function speakCurrentWord() {
     const word = sessionWords[currentWordIndex];
     if (!word) return;
@@ -302,12 +313,6 @@ function speakCurrentWord() {
     const utterance = new SpeechSynthesisUtterance(word.word);
     utterance.lang = currentLanguage === 'de' ? 'de-DE' : 'en-US';
     window.speechSynthesis.speak(utterance);
-}
-
-function closePractice() {
-    cleanupPractice();
-    renderHub();
-    updateStats();
 }
 
 window.addEventListener('keydown', (e) => {

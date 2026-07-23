@@ -1,11 +1,19 @@
 /**
- * Main Application Logic & Auth
+ * ==========================================
+ * MAIN APPLICATION LOGIC & UI CONTROLLER
+ * ==========================================
  */
+
+// --- GLOBAL STATE ---
 let currentUser = null;
 let currentLanguage = 'de';
 let searchTimeout = null;
 let userSettings = { daily_limit: 20 };
+let lastSearchQuery = '';
+let lastFilterType = null;
+let swipeItemData = { startX: 0, currentX: 0, activeEl: null, isMouse: false };
 
+// --- INITIALIZATION ---
 async function init() {
     const userId = localStorage.getItem('user_id');
     if (userId) {
@@ -21,22 +29,10 @@ async function init() {
     } else renderLogin();
 }
 
+// --- AUTH & PROFILES ---
 function renderLogin() {
     document.getElementById('app').innerHTML = appRender.login();
     loadProfiles();
-}
-
-function renderHub() {
-    document.getElementById('app').innerHTML = appRender.hub();
-    // Safely populate user data that cannot go through innerHTML
-    const nameEl = document.getElementById('settingsUserName');
-    if (nameEl) nameEl.textContent = currentUser.name;
-    const emailEl = document.getElementById('settingsUserEmail');
-    if (emailEl) emailEl.textContent = currentUser.email;
-    const telegramEl = document.getElementById('settingsUserTelegram');
-    if (telegramEl) {
-        telegramEl.textContent = currentUser.telegram_chat_id ? `TG ID: ${currentUser.telegram_chat_id}` : 'TG ID: Not set';
-    }
 }
 
 async function loadProfiles() {
@@ -62,10 +58,84 @@ async function loadProfiles() {
     }
 }
 
+async function handleCreateProfile() { 
+    const n = document.getElementById('newName').value.trim(); 
+    const e = document.getElementById('newEmail').value.trim(); 
+    if (!n || !e) return; 
+    const res = await API.request('/api/users', 'POST', { name: n, email: e }); 
+    if (res.status === 'ok' && res.user) selectProfile(res.user.id); 
+    else alert(res.message || "Failed to create profile");
+}
+
+function selectProfile(id) { 
+    localStorage.setItem('user_id', id); 
+    location.reload(); 
+}
+
+function logout() { 
+    localStorage.removeItem('user_id'); 
+    location.reload(); 
+}
+
+async function deleteProfile() { 
+    if(confirm("Permanently delete this profile? All data for this profile will be lost.")) { 
+        const res = await API.request('/api/me', 'DELETE'); 
+        if (res.status === 'ok') logout(); 
+    } 
+}
+
+// --- NAVIGATION & PANELS ---
+function renderHub() {
+    document.getElementById('app').innerHTML = appRender.hub();
+    const nameEl = document.getElementById('settingsUserName');
+    if (nameEl) nameEl.textContent = currentUser.name;
+    const emailEl = document.getElementById('settingsUserEmail');
+    if (emailEl) emailEl.textContent = currentUser.email;
+    const telegramEl = document.getElementById('settingsUserTelegram');
+    if (telegramEl) {
+        telegramEl.textContent = currentUser.telegram_chat_id ? `TG ID: ${currentUser.telegram_chat_id}` : 'TG ID: Not set';
+    }
+}
+
+function toggleView(type) {
+    const searchPanel = document.getElementById('searchPanel');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const homePanel = document.getElementById('homePanel');
+
+    // Hide all panels
+    if (searchPanel) searchPanel.classList.remove('active');
+    if (settingsPanel) settingsPanel.classList.remove('active');
+    if (homePanel) homePanel.style.display = 'none';
+
+    // Show selected panel
+    if (type === 'search') {
+        if (searchPanel) searchPanel.classList.add('active');
+        const inputEl = document.getElementById('searchInput');
+        if (inputEl && !inputEl.value) {
+            setTimeout(() => inputEl.focus(), 50); 
+        }
+    } else if (type === 'settings') {
+        if (settingsPanel) settingsPanel.classList.add('active');
+    } else {
+        if (homePanel) homePanel.style.display = 'flex';
+    }
+
+    // Update bottom navbar state
+    const nav = document.getElementById('bottomNav');
+    if (nav) {
+        nav.setAttribute('data-active', type);
+        document.querySelectorAll('.nav-segment').forEach(el => el.classList.remove('active'));
+        const activeSeg = document.querySelector(`.nav-segment[onclick="toggleView('${type}')"]`);
+        if (activeSeg) activeSeg.classList.add('active');
+    }
+
+    window.scrollTo(0, 0);
+}
+
+// --- HOME & STATS ---
 async function updateStats() {
     const res = await API.request(`/api/words/stats?lang=${currentLanguage}`);
     if (res.status === 'ok' && res.data) {
-        lastStats = res.data;
         const stats = res.data;
         const fields = {
             'statQueue': stats.total || 0,
@@ -97,8 +167,64 @@ async function updateStats() {
     }
 }
 
-// --- SEARCH & FILTER ---
+// --- ADD WORD MODAL ---
+function openAddWordModal() {
+    const homeInput = document.getElementById('homeAddWordText');
+    const wordVal = homeInput ? homeInput.value.trim() : '';
 
+    const overlay = document.getElementById('addWordOverlay');
+    if (overlay) {
+        overlay.classList.add('active');
+        const wordInput = document.getElementById('addWordText');
+        const transInput = document.getElementById('addTranslationText');
+        if (wordInput) wordInput.value = wordVal;
+        if (transInput) {
+            transInput.value = '';
+            setTimeout(() => transInput.focus(), 150);
+        }
+    }
+}
+
+function closeAddWordModal(e) {
+    if (e && e.target && !e.target.classList.contains('modal-overlay') && e.type === 'click') {
+        return;
+    }
+    const overlay = document.getElementById('addWordOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+}
+
+async function handleAddWordSubmit() {
+    const wordInput = document.getElementById('addWordText');
+    const translationInput = document.getElementById('addTranslationText');
+    const exampleInput = document.getElementById('addExampleText');
+    const levelInput = document.getElementById('addLevelText');
+
+    const word = wordInput ? wordInput.value.trim() : '';
+    const translation = translationInput ? translationInput.value.trim() : '';
+    const example = exampleInput ? exampleInput.value.trim() : undefined;
+    const level = levelInput ? levelInput.value.trim() : undefined;
+
+    if (!word || !translation) return alert('Word and translation are required.');
+
+    const res = await API.request('/api/words', 'POST', { word, translation, example, level, lang: currentLanguage });
+    if (res.status === 'ok') {
+        const homeInput = document.getElementById('homeAddWordText');
+        if (homeInput) homeInput.value = '';
+        if (wordInput) wordInput.value = '';
+        if (translationInput) translationInput.value = '';
+        if (exampleInput) exampleInput.value = '';
+        if (levelInput) levelInput.value = '';
+        
+        closeAddWordModal();
+        updateStats();
+    } else {
+        alert(res.message || "Failed to add word");
+    }
+}
+
+// --- SEARCH & DICTIONARY MANAGEMENT ---
 function handleSearch(query) {
     clearTimeout(searchTimeout);
     const container = document.getElementById('searchResults');
@@ -114,6 +240,21 @@ function handleSearch(query) {
         const res = await API.request(`/api/words/search?q=${encodeURIComponent(query)}&lang=${currentLanguage}`);
         renderSearchResults(res.data || [], query);
     }, 300);
+}
+
+async function handleFilterClick(filterType) {
+    lastFilterType = filterType;
+    lastSearchQuery = '';
+    toggleView('search');
+    
+    const inputEl = document.getElementById('searchInput');
+    if (inputEl) inputEl.value = '';
+    
+    const container = document.getElementById('searchResults');
+    container.innerHTML = '<div style="text-align:center; padding:100px; color:var(--text-low); font-size:1.1rem;">Searching...</div>';
+    
+    const res = await API.request(`/api/words/search?filter=${filterType}&lang=${currentLanguage}`);
+    renderSearchResults(res.data || []); 
 }
 
 function renderSearchResults(words, query = '') {
@@ -169,15 +310,12 @@ function renderSearchResults(words, query = '') {
                 </div>
             `;
             
-            // Populate edit fields securely via DOM properties
             el.querySelector(`#edit-word-${w.id}`).value = w.word || '';
             el.querySelector(`#edit-translation-${w.id}`).value = w.translation || '';
             el.querySelector(`#edit-example-${w.id}`).value = w.example || '';
             el.querySelector(`#edit-level-${w.id}`).value = w.level || '';
             
             container.appendChild(el);
-            
-            // Build the initial view mode
             updateViewMode(w.id, w);
         });
     } else {
@@ -190,103 +328,6 @@ function renderSearchResults(words, query = '') {
         `;
     }
 }
-
-// --- SWIPE LOGIC ---
-let swipeItemData = { startX: 0, currentX: 0, activeEl: null, isMouse: false };
-
-function handleSwipeStart(e) {
-    const isTouch = e.type.includes('touch');
-    const coord = isTouch ? e.touches[0] : e;
-    
-    swipeItemData.startX = coord.clientX;
-    swipeItemData.activeEl = e.currentTarget;
-    swipeItemData.activeEl.style.transition = 'none';
-    swipeItemData.isMouse = !isTouch;
-
-    if (!isTouch) {
-        window.addEventListener('mousemove', handleSwipeMove);
-        window.addEventListener('mouseup', handleSwipeEnd);
-    }
-}
-
-function handleSwipeMove(e) {
-    if (!swipeItemData.activeEl) return;
-    
-    const coord = e.type.includes('touch') ? e.touches[0] : e;
-    const dx = coord.clientX - swipeItemData.startX;
-    
-    if (dx > 0) return;
-    
-    const moveX = Math.max(dx, -100);
-    swipeItemData.activeEl.style.transform = `translateX(${moveX}px)`;
-    
-    if (Math.abs(dx) > 10 && e.cancelable) e.preventDefault();
-}
-
-function handleSwipeEnd(e) {
-    if (!swipeItemData.activeEl) return;
-    
-    const coord = e.type.includes('touch') ? e.changedTouches[0] : e;
-    const dx = coord.clientX - swipeItemData.startX;
-    
-    swipeItemData.activeEl.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
-    
-    if (dx < -60) {
-        swipeItemData.activeEl.style.transform = 'translateX(-80px)';
-    } else {
-        swipeItemData.activeEl.style.transform = 'translateX(0)';
-    }
-    
-    if (swipeItemData.isMouse) {
-        window.removeEventListener('mousemove', handleSwipeMove);
-        window.removeEventListener('mouseup', handleSwipeEnd);
-    }
-    
-    swipeItemData.activeEl = null;
-}
-
-async function handleDeleteWord(id) {
-    if (!confirm("Delete this word?")) {
-        const el = document.querySelector(`#word-${id} .swipe-content`);
-        if (el) el.style.transform = 'translateX(0)';
-        return;
-    }
-    
-    const res = await API.request(`/api/words/${id}`, 'DELETE');
-    if (res.status === 'ok') {
-        const container = document.getElementById(`word-${id}`);
-        if (container) {
-            container.style.transition = 'all 0.3s ease';
-            container.style.opacity = '0';
-            container.style.maxHeight = '0';
-            container.style.margin = '0';
-            setTimeout(() => {
-                container.remove();
-                updateStats();
-            }, 300);
-        }
-    } else {
-        alert(res.message || "Failed to delete");
-    }
-}
-
-async function handleFilterClick(filterType) {
-    lastFilterType = filterType;
-    lastSearchQuery = '';
-    toggleView('search');
-    
-    const inputEl = document.getElementById('searchInput');
-    if (inputEl) inputEl.value = '';
-    
-    const container = document.getElementById('searchResults');
-    container.innerHTML = '<div style="text-align:center; padding:100px; color:var(--text-low); font-size:1.1rem;">Searching...</div>';
-    
-    const res = await API.request(`/api/words/search?filter=${filterType}&lang=${currentLanguage}`);
-    renderSearchResults(res.data || []); 
-}
-
-let lastSearchQuery = '';
-let lastFilterType = null;
 
 function updateViewMode(id, w) {
     const viewMode = document.getElementById(`view-mode-${id}`);
@@ -357,160 +398,84 @@ async function saveInlineEdit(id) {
     }
 }
 
-function openAddWordModal() {
-    const homeInput = document.getElementById('homeAddWordText');
-    const wordVal = homeInput ? homeInput.value.trim() : '';
-
-    const overlay = document.getElementById('addWordOverlay');
-    if (overlay) {
-        overlay.classList.add('active');
-        const wordInput = document.getElementById('addWordText');
-        const transInput = document.getElementById('addTranslationText');
-        if (wordInput) wordInput.value = wordVal;
-        if (transInput) {
-            transInput.value = '';
-            setTimeout(() => transInput.focus(), 150);
-        }
-    }
-}
-
-function closeAddWordModal(e) {
-    if (e && e.target && !e.target.classList.contains('modal-overlay') && e.type === 'click') {
+async function handleDeleteWord(id) {
+    if (!confirm("Delete this word?")) {
+        const el = document.querySelector(`#word-${id} .swipe-content`);
+        if (el) el.style.transform = 'translateX(0)';
         return;
     }
-    const overlay = document.getElementById('addWordOverlay');
-    if (overlay) {
-        overlay.classList.remove('active');
-    }
-}
-
-async function handleAddWordSubmit() {
-    const wordInput = document.getElementById('addWordText');
-    const translationInput = document.getElementById('addTranslationText');
-    const exampleInput = document.getElementById('addExampleText');
-    const levelInput = document.getElementById('addLevelText');
-
-    const word = wordInput ? wordInput.value.trim() : '';
-    const translation = translationInput ? translationInput.value.trim() : '';
-    const example = exampleInput ? exampleInput.value.trim() : undefined;
-    const level = levelInput ? levelInput.value.trim() : undefined;
-
-    if (!word || !translation) return alert('Word and translation are required.');
-
-    const res = await API.request('/api/words', 'POST', { word, translation, example, level, lang: currentLanguage });
+    
+    const res = await API.request(`/api/words/${id}`, 'DELETE');
     if (res.status === 'ok') {
-        const homeInput = document.getElementById('homeAddWordText');
-        if (homeInput) homeInput.value = '';
-        if (wordInput) wordInput.value = '';
-        if (translationInput) translationInput.value = '';
-        if (exampleInput) exampleInput.value = '';
-        if (levelInput) levelInput.value = '';
-        
-        closeAddWordModal();
-        updateStats();
-    } else {
-        alert(res.message || "Failed to add word");
-    }
-}
-
-// --- SETTINGS & PROFILE ---
-
-function toggleView(type) {
-    const searchPanel = document.getElementById('searchPanel');
-    const settingsPanel = document.getElementById('settingsPanel');
-    const addWordPanel = document.getElementById('addWordPanel');
-    const homePanel = document.getElementById('homePanel');
-
-    // Hide all
-    if (searchPanel) searchPanel.classList.remove('active');
-    if (settingsPanel) settingsPanel.classList.remove('active');
-    if (addWordPanel) addWordPanel.classList.remove('active');
-    if (homePanel) homePanel.style.display = 'none';
-
-    // Show selected
-    if (type === 'search') {
-        if (searchPanel) searchPanel.classList.add('active');
-        const inputEl = document.getElementById('searchInput');
-        if (inputEl && !inputEl.value) {
-            setTimeout(() => inputEl.focus(), 50); 
-        }
-    } else if (type === 'settings') {
-        if (settingsPanel) settingsPanel.classList.add('active');
-    } else if (type === 'addWord') {
-        // Always re-render to reset the form
-        if (addWordPanel) {
-            addWordPanel.innerHTML = appRender.addWord();
-            addWordPanel.classList.add('active');
-            const inputEl = document.getElementById('addWordText');
-            if (inputEl) setTimeout(() => inputEl.focus(), 50);
+        const container = document.getElementById(`word-${id}`);
+        if (container) {
+            container.style.transition = 'all 0.3s ease';
+            container.style.opacity = '0';
+            container.style.maxHeight = '0';
+            container.style.margin = '0';
+            setTimeout(() => {
+                container.remove();
+                updateStats();
+            }, 300);
         }
     } else {
-        if (homePanel) homePanel.style.display = 'flex';
-    }
-
-    // Update navbar state
-    const nav = document.getElementById('bottomNav');
-    if (nav) {
-        nav.setAttribute('data-active', type);
-        document.querySelectorAll('.nav-segment').forEach(el => el.classList.remove('active'));
-        const activeSeg = document.querySelector(`.nav-segment[onclick="toggleView('${type}')"]`);
-        if (activeSeg) activeSeg.classList.add('active');
-    }
-
-    window.scrollTo(0, 0);
-}
-
-async function saveLimit(val) { 
-    const res = await API.request('/api/me/settings', 'PUT', { lang: currentLanguage, daily_limit: parseInt(val) });
-    if (res.status === 'ok') {
-        userSettings.daily_limit = parseInt(val);
-        updateStats();
+        alert(res.message || "Failed to delete");
     }
 }
 
-async function saveNotificationTime(val) { 
-    const res = await API.request('/api/me/settings', 'PUT', { lang: currentLanguage, notification_time: parseInt(val) });
-    if (res.status === 'ok') {
-        userSettings.notification_time = parseInt(val);
+// --- SWIPE TO DELETE LOGIC (LIST ITEMS) ---
+function handleSwipeStart(e) {
+    const isTouch = e.type.includes('touch');
+    const coord = isTouch ? e.touches[0] : e;
+    
+    swipeItemData.startX = coord.clientX;
+    swipeItemData.activeEl = e.currentTarget;
+    swipeItemData.activeEl.style.transition = 'none';
+    swipeItemData.isMouse = !isTouch;
+
+    if (!isTouch) {
+        window.addEventListener('mousemove', handleSwipeMove);
+        window.addEventListener('mouseup', handleSwipeEnd);
     }
 }
 
-async function toggleNotifications(enabled) {
-    const val = enabled ? 720 : -1; // 720 = 12:00
-    const res = await API.request('/api/me/settings', 'PUT', { lang: currentLanguage, notification_time: val });
-    if (res.status === 'ok') {
-        userSettings.notification_time = val;
-        const timeRow = document.getElementById('notifTimeRow');
-        const thresholdRow = document.getElementById('notifThresholdRow');
-        if (enabled) {
-            timeRow?.classList.remove('hidden');
-            thresholdRow?.classList.remove('hidden');
-            const selectEl = timeRow?.querySelector('select');
-            if (selectEl) {
-                selectEl.value = "720";
-            }
-        } else {
-            timeRow?.classList.add('hidden');
-            thresholdRow?.classList.add('hidden');
-        }
+function handleSwipeMove(e) {
+    if (!swipeItemData.activeEl) return;
+    
+    const coord = e.type.includes('touch') ? e.touches[0] : e;
+    const dx = coord.clientX - swipeItemData.startX;
+    
+    if (dx > 0) return;
+    
+    const moveX = Math.max(dx, -100);
+    swipeItemData.activeEl.style.transform = `translateX(${moveX}px)`;
+    
+    if (Math.abs(dx) > 10 && e.cancelable) e.preventDefault();
+}
+
+function handleSwipeEnd(e) {
+    if (!swipeItemData.activeEl) return;
+    
+    const coord = e.type.includes('touch') ? e.changedTouches[0] : e;
+    const dx = coord.clientX - swipeItemData.startX;
+    
+    swipeItemData.activeEl.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+    
+    if (dx < -60) {
+        swipeItemData.activeEl.style.transform = 'translateX(-80px)';
+    } else {
+        swipeItemData.activeEl.style.transform = 'translateX(0)';
     }
-}
-
-async function saveNotificationThreshold(val) {
-    const res = await API.request('/api/me/settings', 'PUT', { lang: currentLanguage, notification_threshold: parseInt(val) });
-    if (res.status === 'ok') {
-        userSettings.notification_threshold = parseInt(val);
+    
+    if (swipeItemData.isMouse) {
+        window.removeEventListener('mousemove', handleSwipeMove);
+        window.removeEventListener('mouseup', handleSwipeEnd);
     }
+    
+    swipeItemData.activeEl = null;
 }
 
-async function changeLanguage(lang) {
-    currentLanguage = lang;
-    const res = await API.request(`/api/me/settings?lang=${currentLanguage}`);
-    if (res.status === 'ok') userSettings = res.settings;
-    updateStats();
-    renderSettingsPanel(false);
-}
-
+// --- SETTINGS & PROFILE MANAGEMENT ---
 function renderSettingsPanel(edit) { 
     document.getElementById('settingsPanel').innerHTML = appRender.settings(edit);
     
@@ -533,15 +498,6 @@ function renderSettingsPanel(edit) {
     }
 }
 
-async function handleCreateProfile() { 
-    const n = document.getElementById('newName').value.trim(); 
-    const e = document.getElementById('newEmail').value.trim(); 
-    if (!n || !e) return; 
-    const res = await API.request('/api/users', 'POST', { name: n, email: e }); 
-    if (res.status === 'ok' && res.user) selectProfile(res.user.id); 
-    else alert(res.message || "Failed to create profile");
-}
-
 async function saveProfile() { 
     const name = document.getElementById('editName').value.trim(); 
     const email = document.getElementById('editEmail').value.trim().toLowerCase();
@@ -560,21 +516,54 @@ async function saveProfile() {
     }
 }
 
-function selectProfile(id) { 
-    localStorage.setItem('user_id', id); 
-    location.reload(); 
+async function changeLanguage(lang) {
+    currentLanguage = lang;
+    const res = await API.request(`/api/me/settings?lang=${currentLanguage}`);
+    if (res.status === 'ok') userSettings = res.settings;
+    updateStats();
+    renderSettingsPanel(false);
 }
 
-function logout() { 
-    localStorage.removeItem('user_id'); 
-    location.reload(); 
+async function saveLimit(val) { 
+    const res = await API.request('/api/me/settings', 'PUT', { lang: currentLanguage, daily_limit: parseInt(val) });
+    if (res.status === 'ok') {
+        userSettings.daily_limit = parseInt(val);
+        updateStats();
+    }
 }
 
-async function deleteProfile() { 
-    if(confirm("Permanently delete this profile? All data for this profile will be lost.")) { 
-        const res = await API.request('/api/me', 'DELETE'); 
-        if (res.status === 'ok') logout(); 
-    } 
+async function toggleNotifications(enabled) {
+    const val = enabled ? 720 : -1;
+    const res = await API.request('/api/me/settings', 'PUT', { lang: currentLanguage, notification_time: val });
+    if (res.status === 'ok') {
+        userSettings.notification_time = val;
+        const timeRow = document.getElementById('notifTimeRow');
+        const thresholdRow = document.getElementById('notifThresholdRow');
+        if (enabled) {
+            timeRow?.classList.remove('hidden');
+            thresholdRow?.classList.remove('hidden');
+            const selectEl = timeRow?.querySelector('select');
+            if (selectEl) selectEl.value = "720";
+        } else {
+            timeRow?.classList.add('hidden');
+            thresholdRow?.classList.add('hidden');
+        }
+    }
 }
 
+async function saveNotificationThreshold(val) {
+    const res = await API.request('/api/me/settings', 'PUT', { lang: currentLanguage, notification_threshold: parseInt(val) });
+    if (res.status === 'ok') {
+        userSettings.notification_threshold = parseInt(val);
+    }
+}
+
+async function saveNotificationTime(val) { 
+    const res = await API.request('/api/me/settings', 'PUT', { lang: currentLanguage, notification_time: parseInt(val) });
+    if (res.status === 'ok') {
+        userSettings.notification_time = parseInt(val);
+    }
+}
+
+// --- START APP ---
 init();
