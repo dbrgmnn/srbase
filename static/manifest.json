@@ -1,6 +1,5 @@
 {
-  "name": "SRbase Dictionary",
-  "short_name": "SRbase",
+  "name": "SRbase",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#121212",

@@ -90,11 +90,11 @@ const appRender = {
             <div class="panel-label" style="text-align:center;">Add Word</div>
         </div>
         <div class="card" style="padding:20px; margin-top:20px;">
-            <input type="text" id="addWordText" class="input" placeholder="Word (Required)" required>
-            <input type="text" id="addTranslationText" class="input" placeholder="Translation (Required)" required>
-            <input type="text" id="addExampleText" class="input" placeholder="Example Sentence (Optional)">
+            <input type="text" id="addWordText" class="input" placeholder="Word*" required>
+            <input type="text" id="addTranslationText" class="input" placeholder="Translation*" required>
+            <textarea id="addExampleText" class="input" placeholder="Example" rows="3"></textarea>
             <select id="addLevelText" class="input" style="color:var(--text-med);">
-                <option value="">Level (Optional)</option>
+                <option value="">Level</option>
                 <option value="A1">A1</option>
                 <option value="A2">A2</option>
                 <option value="B1">B1</option>

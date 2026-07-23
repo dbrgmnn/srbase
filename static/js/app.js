@@ -142,11 +142,11 @@ function renderSearchResults(words, query = '') {
                         
                         <!-- EDIT MODE (Hidden by default) -->
                         <div id="edit-mode-${w.id}" style="display:none; flex-direction:column; gap:8px;" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                            <input type="text" id="edit-word-${w.id}" class="input" style="margin:0; padding:8px;" placeholder="Word">
-                            <input type="text" id="edit-translation-${w.id}" class="input" style="margin:0; padding:8px;" placeholder="Translation">
-                            <textarea id="edit-example-${w.id}" class="input" style="margin:0; padding:8px; resize:none; font-size:0.9rem;" rows="2" placeholder="Example"></textarea>
+                            <input type="text" id="edit-word-${w.id}" class="input" style="margin:0; padding:8px;" placeholder="Word*">
+                            <input type="text" id="edit-translation-${w.id}" class="input" style="margin:0; padding:8px;" placeholder="Translation*">
+                            <textarea id="edit-example-${w.id}" class="input" style="margin:0; padding:8px; resize:none; font-size:0.9rem;" rows="3" placeholder="Example"></textarea>
                             <select id="edit-level-${w.id}" class="input" style="margin:0; padding:8px; color:var(--text-med);">
-                                <option value="">Level (Optional)</option>
+                                <option value="">Level</option>
                                 <option value="A1">A1</option>
                                 <option value="A2">A2</option>
                                 <option value="B1">B1</option>
