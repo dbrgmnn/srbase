@@ -45,7 +45,7 @@ const appRender = {
                 <div class="panel-label" style="text-align:center;">Home</div>
             </div>
             
-            <div class="card" style="padding:12px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px;">
+            <div style="padding:4px 0; margin-bottom:10px; display:flex; align-items:center; gap:12px;">
                 <input type="text" id="homeAddWordText" class="input" placeholder="Add word..." style="margin-bottom:0;" onkeydown="if(event.key==='Enter') openAddWordModal()">
                 <button onclick="openAddWordModal()" class="btn" style="width:44px; height:44px; border-radius:50%; background:#30d158; color:#fff; padding:0; flex-shrink:0; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
