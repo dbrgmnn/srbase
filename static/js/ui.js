@@ -156,12 +156,14 @@ const appRender = {
                 </div>`;
 
         const actionButtons = isEdit
-            ? `<div style="margin-top:20px; display:flex; gap:12px; width:100%;">
-                    <button class="btn btn-secondary btn-block" onclick="renderSettingsPanel(false)">Cancel</button>
-                    <button class="btn btn-primary btn-block" onclick="saveProfile()">Save</button>
-               </div>`
-            : `<div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center; width:100%;">
+            ? `<div style="margin-top:20px; display:flex; flex-direction:column; align-items:center; gap:16px; width:100%;">
+                    <div style="display:flex; gap:12px; width:100%;">
+                        <button class="btn btn-secondary btn-block" onclick="renderSettingsPanel(false)">Cancel</button>
+                        <button class="btn btn-primary btn-block" onclick="saveProfile()">Save</button>
+                    </div>
                     <button onclick="deleteProfile()" style="color:#ff453a; font-weight:600; font-size:0.95rem; cursor:pointer; border:none; background:transparent; padding:0; outline:none; font-family:inherit;">Delete Profile</button>
+               </div>`
+            : `<div style="margin-top:20px; display:flex; justify-content:center; align-items:center; width:100%;">
                     <button class="btn btn-secondary" onclick="logout()">Logout</button>
                </div>`;
 
