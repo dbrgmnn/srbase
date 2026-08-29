@@ -44,13 +44,6 @@ const appRender = {
             <div class="panel-section" style="margin-top:0;">
                 <div class="panel-label" style="text-align:center;">Home</div>
             </div>
-            
-            <div style="padding:4px 0; margin-bottom:10px; display:flex; align-items:center; gap:12px;">
-                <input type="text" id="homeAddWordText" class="input" placeholder="Add word..." style="margin-bottom:0;" onkeydown="if(event.key==='Enter') openAddWordModal()">
-                <button onclick="openAddWordModal()" class="btn" style="width:44px; height:44px; border-radius:50%; background:#30d158; color:#fff; padding:0; flex-shrink:0; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
-            </div>
 
             <div class="dashboard-grid">
 
@@ -93,6 +86,14 @@ const appRender = {
                     <span id="btnNew" class="practice-sub-new">0 new</span>
                 </span>
             </button>
+            
+            <div style="padding:4px 0; margin-bottom:10px; margin-top:20px; display:flex; align-items:center; gap:12px;">
+                <input type="text" id="homeAddWordText" class="input" placeholder="Type word..." style="margin-bottom:0;" onkeydown="if(event.key==='Enter') openAddWordModal()">
+                <button onclick="openAddWordModal()" class="btn" style="width:44px; height:44px; border-radius:50%; background:#30d158; color:#fff; padding:0; flex-shrink:0; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+            </div>
+            
         </div>
     `,
 
