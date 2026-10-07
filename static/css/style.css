@@ -473,3 +473,82 @@ input:checked + .slider:before {
     .level-tag { left: 15px; }
     .card-content { padding: 25px; }
 }
+
+/* --- HOME COMPACT MODE --- */
+#homePanel .dashboard-grid {
+    gap: 10px;
+}
+
+#homePanel .dashboard-row {
+    gap: 10px;
+}
+
+#homePanel .stat-card {
+    padding: 14px 12px;
+    border-radius: 14px;
+    min-height: 72px;
+}
+
+#homePanel .stat-card.small {
+    padding: 10px 6px;
+    min-height: 58px;
+}
+
+#homePanel .stat-num {
+    font-size: 0.95rem;
+    line-height: 1;
+    letter-spacing: -0.3px;
+}
+
+#homePanel .stat-label {
+    font-size: 0.64rem;
+    margin-top: 4px;
+    letter-spacing: 0;
+}
+
+#homePanel .practice-btn {
+    gap: 3px;
+    min-height: 56px;
+    padding: 12px 14px;
+}
+
+#homePanel .practice-btn-title {
+    font-size: 1.05rem;
+}
+
+#homePanel .practice-btn-sub {
+    font-size: 0.72rem;
+    gap: 4px;
+}
+
+#homePanel .card {
+    border-radius: 14px;
+}
+
+#homePanel .panel-label {
+    font-size: 0.68rem;
+    letter-spacing: 1.4px;
+    margin-bottom: 0;
+}
+
+#homePanel .input {
+    padding: 10px 12px;
+    font-size: 0.92rem;
+    margin-bottom: 10px;
+    border-radius: 12px;
+}
+
+#homePanel textarea.input {
+    min-height: 70px;
+}
+
+#homePanel select.input {
+    height: 42px;
+}
+
+#homePanel #homeAiFillBtn,
+#homePanel #homeAddSubmitBtn {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+}
