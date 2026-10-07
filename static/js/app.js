@@ -199,6 +199,19 @@ function closeAddWordModal(e) {
     }
 }
 
+function clearWordForm({ wordId, translationId, exampleId, levelId }) {
+    const wordInput = document.getElementById(wordId);
+    const translationInput = document.getElementById(translationId);
+    const exampleInput = document.getElementById(exampleId);
+    const levelInput = document.getElementById(levelId);
+
+    if (wordInput) wordInput.value = '';
+    if (translationInput) translationInput.value = '';
+    if (exampleInput) exampleInput.value = '';
+    if (levelInput) levelInput.value = '';
+}
+
+
 async function fillWordDataWithAI({ wordId, translationId, exampleId, levelId, buttonId }) {
     const wordInput = document.getElementById(wordId);
     const translationInput = document.getElementById(translationId);
@@ -206,8 +219,10 @@ async function fillWordDataWithAI({ wordId, translationId, exampleId, levelId, b
     const levelInput = document.getElementById(levelId);
     const aiBtn = document.getElementById(buttonId);
 
+    const clearCurrentForm = () => clearWordForm({ wordId, translationId, exampleId, levelId });
     const input = wordInput ? wordInput.value.trim() : '';
     if (!input) {
+        clearCurrentForm();
         alert('Enter a word first.');
         return;
     }
@@ -228,11 +243,13 @@ async function fillWordDataWithAI({ wordId, translationId, exampleId, levelId, b
     }
 
     if (res.status !== 'ok' || !res.data) {
+        clearCurrentForm();
         alert(res.message || 'AI request failed');
         return;
     }
 
     if (!res.data.is_valid) {
+        clearCurrentForm();
         alert('This does not look like a valid word or phrase.');
         return;
     }
@@ -259,12 +276,14 @@ async function submitWordForm({ wordId, translationId, exampleId, levelId, after
     const exampleInput = document.getElementById(exampleId);
     const levelInput = document.getElementById(levelId);
 
+    const clearCurrentForm = () => clearWordForm({ wordId, translationId, exampleId, levelId });
     const word = wordInput ? wordInput.value.trim() : '';
     const translation = translationInput ? translationInput.value.trim() : '';
     const example = exampleInput ? exampleInput.value.trim() : undefined;
     const level = levelInput ? levelInput.value.trim() : undefined;
 
     if (!word || !translation) {
+        clearCurrentForm();
         alert('Word and translation are required.');
         return;
     }
@@ -278,10 +297,7 @@ async function submitWordForm({ wordId, translationId, exampleId, levelId, after
     });
 
     if (res.status === 'ok') {
-        if (wordInput) wordInput.value = '';
-        if (translationInput) translationInput.value = '';
-        if (exampleInput) exampleInput.value = '';
-        if (levelInput) levelInput.value = '';
+        clearCurrentForm();
 
         if (typeof afterSuccess === 'function') {
             afterSuccess();
@@ -289,6 +305,7 @@ async function submitWordForm({ wordId, translationId, exampleId, levelId, after
 
         updateStats();
     } else {
+        clearCurrentForm();
         alert(res.message || 'Failed to add word');
     }
 }

@@ -78,7 +78,7 @@ const appRender = {
                 </div>
             </div>
 
-            <button class="btn btn-primary btn-lg btn-block practice-btn" style="margin-top:25px;" onclick="startPractice()" disabled>
+            <button class="btn btn-primary btn-lg btn-block practice-btn" style="margin-top:18px;" onclick="startPractice()" disabled>
                 <span class="practice-btn-title">Practice</span>
                 <span class="practice-btn-sub">
                     <span id="btnDue" class="practice-sub-review">0 review</span>
@@ -87,8 +87,7 @@ const appRender = {
                 </span>
             </button>
 
-                <div class="card" style="padding:18px; margin-top:20px;">
-                    <div class="panel-label" style="margin-bottom:14px;">Quick Add</div>
+                <div class="card" style="padding:14px; margin-top:16px;">
 
                     <input
                         type="text"
@@ -122,7 +121,7 @@ const appRender = {
                         <option value="C2">C2</option>
                     </select>
 
-                    <div style="display:flex; gap:12px; margin-top:10px;">
+                    <div style="display:flex; gap:10px; margin-top:8px;">
                         <button id="homeAiFillBtn" onclick="handleHomeAIFill()" class="btn btn-ghost-muted" style="flex:1;">
                             AI Translate
                         </button>
