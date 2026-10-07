@@ -117,6 +117,11 @@ const appRender = {
                         <option value="C1">C1</option>
                         <option value="C2">C2</option>
                     </select>
+
+                    <button id="aiFillBtn" onclick="handleAIFill()" class="btn btn-ghost-muted" style="width:100%; margin-top:10px;">
+                        AI Translate
+                    </button>
+
                     <div style="margin-top:20px; display:flex; justify-content:space-between; gap:16px;">
                         <button onclick="closeAddWordModal()" class="btn btn-ghost-muted" style="flex:1;">Cancel</button>
                         <button id="addWordSubmitBtn" onclick="handleAddWordSubmit()" class="btn btn-primary" style="flex:1;">Add</button>
@@ -125,6 +130,8 @@ const appRender = {
             </div>
         </div>
     `,
+
+
 
     // --- SEARCH / DICTIONARY ---
     search: () => `

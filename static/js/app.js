@@ -177,10 +177,13 @@ function openAddWordModal() {
         overlay.classList.add('active');
         const wordInput = document.getElementById('addWordText');
         const transInput = document.getElementById('addTranslationText');
+        const exampleInput = document.getElementById('addExampleText');
+        const levelInput = document.getElementById('addLevelText');
+
         if (wordInput) wordInput.value = wordVal;
-        if (transInput) {
-            transInput.value = '';
-        }
+        if (transInput) transInput.value = '';
+        if (exampleInput) exampleInput.value = '';
+        if (levelInput) levelInput.value = '';
     }
 }
 
@@ -192,6 +195,50 @@ function closeAddWordModal(e) {
     if (overlay) {
         overlay.classList.remove('active');
     }
+}
+
+async function handleAIFill() {
+    const wordInput = document.getElementById('addWordText');
+    const translationInput = document.getElementById('addTranslationText');
+    const exampleInput = document.getElementById('addExampleText');
+    const levelInput = document.getElementById('addLevelText');
+    const aiBtn = document.getElementById('aiFillBtn');
+
+    const input = wordInput ? wordInput.value.trim() : '';
+    if (!input) {
+        alert('Enter a word first.');
+        return;
+    }
+
+    if (aiBtn) {
+        aiBtn.disabled = true;
+        aiBtn.textContent = 'Filling...';
+    }
+
+    const res = await API.request('/api/ai/translate', 'POST', {
+        input,
+        lang: currentLanguage
+    });
+
+    if (aiBtn) {
+        aiBtn.disabled = false;
+        aiBtn.textContent = 'AI Fill';
+    }
+
+    if (res.status !== 'ok' || !res.data) {
+        alert(res.message || 'AI request failed');
+        return;
+    }
+
+    if (!res.data.is_valid) {
+        alert('This does not look like a valid word or phrase.');
+        return;
+    }
+
+    if (wordInput && res.data.word) wordInput.value = res.data.word;
+    if (translationInput && res.data.translation) translationInput.value = res.data.translation;
+    if (exampleInput && res.data.example) exampleInput.value = res.data.example;
+    if (levelInput && res.data.level) levelInput.value = res.data.level;
 }
 
 async function handleAddWordSubmit() {

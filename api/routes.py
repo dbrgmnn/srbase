@@ -2,6 +2,7 @@ from aiohttp import web
 from api.auth import UserHandler
 from api.words import WordHandler
 from api.practice import PracticeHandler
+from api.ai import AIHandler
 
 
 async def index_handler(_request):
@@ -32,3 +33,6 @@ def setup_routes(app: web.Application):
     app.router.add_get('/api/practice/session', PracticeHandler.get_session)
     app.router.add_post('/api/practice/answer', PracticeHandler.answer)
     app.router.add_post('/api/practice/undo', PracticeHandler.undo)
+
+    # AI routes
+    app.router.add_post('/api/ai/translate', AIHandler.translate)
