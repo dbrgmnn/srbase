@@ -59,26 +59,4 @@ async def init_db(db_path: str) -> aiosqlite.Connection:
     await db.execute("CREATE INDEX IF NOT EXISTS idx_words_stats ON words(user_id, language, started_at)")
 
     await db.commit()
-
-    async with db.execute("PRAGMA user_version") as cursor:
-        row = await cursor.fetchone()
-        current_version = row[0] if row else 0
-
-    migrations = {
-        1: "ALTER TABLE users ADD COLUMN telegram_chat_id TEXT;",
-        2: "ALTER TABLE user_settings ADD COLUMN notification_threshold INTEGER DEFAULT 1;"
-    }
-    for version, sql in sorted(migrations.items()):
-        if version > current_version:
-            logger.info("Applying database migrations to version %d...", version)
-            try:
-                await db.execute(sql)
-                await db.execute(f"PRAGMA user_version = {version}")
-                await db.commit()
-                logger.info("Database migration applied to version %d", version)
-            except Exception as e:
-                await db.rollback()
-                logger.error("Database migration failed to apply to version %d", version)
-                raise e
-
     return db
