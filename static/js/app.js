@@ -168,23 +168,25 @@ async function updateStats() {
 }
 
 // --- ADD WORD MODAL ---
-function openAddWordModal() {
-    const homeInput = document.getElementById('homeAddWordText');
-    const wordVal = homeInput ? homeInput.value.trim() : '';
-
+function openAddWordModal(prefillWord = '') {
     const overlay = document.getElementById('addWordOverlay');
     if (overlay) {
         overlay.classList.add('active');
+
         const wordInput = document.getElementById('addWordText');
         const transInput = document.getElementById('addTranslationText');
         const exampleInput = document.getElementById('addExampleText');
         const levelInput = document.getElementById('addLevelText');
 
-        if (wordInput) wordInput.value = wordVal;
+        if (wordInput) wordInput.value = prefillWord.trim();
         if (transInput) transInput.value = '';
         if (exampleInput) exampleInput.value = '';
         if (levelInput) levelInput.value = '';
     }
+}
+
+function openAddWordModalFromSearch() {
+    openAddWordModal('');
 }
 
 function closeAddWordModal(e) {
@@ -197,12 +199,12 @@ function closeAddWordModal(e) {
     }
 }
 
-async function handleAIFill() {
-    const wordInput = document.getElementById('addWordText');
-    const translationInput = document.getElementById('addTranslationText');
-    const exampleInput = document.getElementById('addExampleText');
-    const levelInput = document.getElementById('addLevelText');
-    const aiBtn = document.getElementById('aiFillBtn');
+async function fillWordDataWithAI({ wordId, translationId, exampleId, levelId, buttonId }) {
+    const wordInput = document.getElementById(wordId);
+    const translationInput = document.getElementById(translationId);
+    const exampleInput = document.getElementById(exampleId);
+    const levelInput = document.getElementById(levelId);
+    const aiBtn = document.getElementById(buttonId);
 
     const input = wordInput ? wordInput.value.trim() : '';
     if (!input) {
@@ -212,7 +214,7 @@ async function handleAIFill() {
 
     if (aiBtn) {
         aiBtn.disabled = true;
-        aiBtn.textContent = 'Filling...';
+        aiBtn.textContent = 'Translating...';
     }
 
     const res = await API.request('/api/ai/translate', 'POST', {
@@ -222,7 +224,7 @@ async function handleAIFill() {
 
     if (aiBtn) {
         aiBtn.disabled = false;
-        aiBtn.textContent = 'AI Fill';
+        aiBtn.textContent = 'AI Translate';
     }
 
     if (res.status !== 'ok' || !res.data) {
@@ -241,33 +243,74 @@ async function handleAIFill() {
     if (levelInput && res.data.level) levelInput.value = res.data.level;
 }
 
-async function handleAddWordSubmit() {
-    const wordInput = document.getElementById('addWordText');
-    const translationInput = document.getElementById('addTranslationText');
-    const exampleInput = document.getElementById('addExampleText');
-    const levelInput = document.getElementById('addLevelText');
+async function handleHomeAIFill() {
+    await fillWordDataWithAI({
+        wordId: 'homeWordText',
+        translationId: 'homeTranslationText',
+        exampleId: 'homeExampleText',
+        levelId: 'homeLevelText',
+        buttonId: 'homeAiFillBtn'
+    });
+}
+
+async function submitWordForm({ wordId, translationId, exampleId, levelId, afterSuccess }) {
+    const wordInput = document.getElementById(wordId);
+    const translationInput = document.getElementById(translationId);
+    const exampleInput = document.getElementById(exampleId);
+    const levelInput = document.getElementById(levelId);
 
     const word = wordInput ? wordInput.value.trim() : '';
     const translation = translationInput ? translationInput.value.trim() : '';
     const example = exampleInput ? exampleInput.value.trim() : undefined;
     const level = levelInput ? levelInput.value.trim() : undefined;
 
-    if (!word || !translation) return alert('Word and translation are required.');
+    if (!word || !translation) {
+        alert('Word and translation are required.');
+        return;
+    }
 
-    const res = await API.request('/api/words', 'POST', { word, translation, example, level, lang: currentLanguage });
+    const res = await API.request('/api/words', 'POST', {
+        word,
+        translation,
+        example,
+        level,
+        lang: currentLanguage
+    });
+
     if (res.status === 'ok') {
-        const homeInput = document.getElementById('homeAddWordText');
-        if (homeInput) homeInput.value = '';
         if (wordInput) wordInput.value = '';
         if (translationInput) translationInput.value = '';
         if (exampleInput) exampleInput.value = '';
         if (levelInput) levelInput.value = '';
-        
-        closeAddWordModal();
+
+        if (typeof afterSuccess === 'function') {
+            afterSuccess();
+        }
+
         updateStats();
     } else {
-        alert(res.message || "Failed to add word");
+        alert(res.message || 'Failed to add word');
     }
+}
+
+async function handleHomeAddSubmit() {
+    await submitWordForm({
+        wordId: 'homeWordText',
+        translationId: 'homeTranslationText',
+        exampleId: 'homeExampleText',
+        levelId: 'homeLevelText',
+        afterSuccess: null
+    });
+}
+
+async function handleAddWordSubmit() {
+    await submitWordForm({
+        wordId: 'addWordText',
+        translationId: 'addTranslationText',
+        exampleId: 'addExampleText',
+        levelId: 'addLevelText',
+        afterSuccess: () => closeAddWordModal()
+    });
 }
 
 // --- SEARCH & DICTIONARY MANAGEMENT ---

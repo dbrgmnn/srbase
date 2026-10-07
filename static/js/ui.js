@@ -38,9 +38,9 @@ const appRender = {
         ${appRender.navbar('home')}
         <div id="searchPanel" class="panel">${appRender.search()}</div>
         <div id="settingsPanel" class="panel">${appRender.settings()}</div>
-        <div id="addWordPanel">${appRender.addWord()}</div>
-        
+
         <div class="view-container" id="homePanel">
+
             <div class="panel-section" style="margin-top:0;">
                 <div class="panel-label" style="text-align:center;">Home</div>
             </div>
@@ -86,13 +86,51 @@ const appRender = {
                     <span id="btnNew" class="practice-sub-new">0 new</span>
                 </span>
             </button>
-            
-            <div style="padding:4px 0; margin-bottom:10px; margin-top:20px; display:flex; align-items:center; gap:12px;">
-                <input type="text" id="homeAddWordText" class="input" placeholder="Type word..." style="margin-bottom:0;" onkeydown="if(event.key==='Enter') openAddWordModal()">
-                <button onclick="openAddWordModal()" class="btn" style="width:44px; height:44px; border-radius:50%; background:#30d158; color:#fff; padding:0; flex-shrink:0; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
-            </div>
+
+                <div class="card" style="padding:18px; margin-top:20px;">
+                    <div class="panel-label" style="margin-bottom:14px;">Quick Add</div>
+
+                    <input
+                        type="text"
+                        id="homeWordText"
+                        class="input"
+                        placeholder="Word*"
+                        onkeydown="if(event.key==='Enter') handleHomeAIFill()"
+                    >
+
+                    <input
+                        type="text"
+                        id="homeTranslationText"
+                        class="input"
+                        placeholder="Translation*"
+                    >
+
+                    <textarea
+                        id="homeExampleText"
+                        class="input"
+                        placeholder="Example"
+                        rows="3"
+                    ></textarea>
+
+                    <select id="homeLevelText" class="input" style="color:var(--text-med);">
+                        <option value="">Level</option>
+                        <option value="A1">A1</option>
+                        <option value="A2">A2</option>
+                        <option value="B1">B1</option>
+                        <option value="B2">B2</option>
+                        <option value="C1">C1</option>
+                        <option value="C2">C2</option>
+                    </select>
+
+                    <div style="display:flex; gap:12px; margin-top:10px;">
+                        <button id="homeAiFillBtn" onclick="handleHomeAIFill()" class="btn btn-ghost-muted" style="flex:1;">
+                            AI Translate
+                        </button>
+                        <button id="homeAddSubmitBtn" onclick="handleHomeAddSubmit()" class="btn btn-primary" style="flex:1;">
+                            Add
+                        </button>
+                    </div>
+                </div>
             
         </div>
     `,
@@ -118,10 +156,6 @@ const appRender = {
                         <option value="C2">C2</option>
                     </select>
 
-                    <button id="aiFillBtn" onclick="handleAIFill()" class="btn btn-ghost-muted" style="width:100%; margin-top:10px;">
-                        AI Translate
-                    </button>
-
                     <div style="margin-top:20px; display:flex; justify-content:space-between; gap:16px;">
                         <button onclick="closeAddWordModal()" class="btn btn-ghost-muted" style="flex:1;">Cancel</button>
                         <button id="addWordSubmitBtn" onclick="handleAddWordSubmit()" class="btn btn-primary" style="flex:1;">Add</button>
@@ -132,8 +166,7 @@ const appRender = {
     `,
 
 
-
-    // --- SEARCH / DICTIONARY ---
+    // --- SEARCH / DICTIONARY / ADD WORD---
     search: () => `
         <div class="panel-section" style="margin-top:0;">
             <div class="panel-label" style="text-align:center;">Dictionary</div>
@@ -141,8 +174,17 @@ const appRender = {
         <div style="margin-top:20px; margin-bottom:10px;">
             <input type="text" id="searchInput" class="input" placeholder="Search dictionary..." oninput="handleSearch(this.value)" style="margin-bottom:0;">
         </div>
+
+        <div style="margin-top:12px; margin-bottom:14px;">
+            <button onclick="openAddWordModalFromSearch()" class="btn btn-ghost-muted btn-block">
+                Add word
+            </button>
+        </div>
+
+        ${appRender.addWord()}
         <div id="searchResults"></div>
     `,
+
 
     // --- SETTINGS PANEL ---
     settings: (isEdit = false) => {
